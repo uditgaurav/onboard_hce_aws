@@ -1,8 +1,15 @@
 package register
 
 type InfraDetails struct {
-	Name      string
-	Namespace string
+	Name             string
+	Namespace        string
+	EnvironmentID    string
+	Description      string
+	PlatformName     string
+	ServiceAccount   string
+	InfraSaExists    bool
+	InstallationType string
+	SkipSsl          bool
 }
 
 type Identifiers struct {
@@ -43,4 +50,12 @@ type InfraParameters struct {
 	Infra         InfraDetails
 	InfraScope    string
 	InfraNsExists bool
+}
+
+type Response struct {
+	Data struct {
+		RegisterInfra struct {
+			Token string `json:"token"`
+		} `json:"registerInfra"`
+	} `json:"data"`
 }

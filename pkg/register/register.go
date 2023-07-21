@@ -2,10 +2,20 @@ package register
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"context"
+
+	"github.com/sirupsen/logrus"
+	"github.com/uditgaurav/onboard_hce_aws/pkg/clients"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/apimachinery/pkg/runtime/serializer/recognizer"
 )
 
 // RegisterInfra is a function to register infrastructure details using the Harness API.
@@ -23,6 +33,16 @@ func RegisterInfra(params InfraParameters) {
   	}
 	}`
 
+	// If the user didn't provide infra-environment-id, then set it to infra-name with a '-env' suffix.
+	if params.Infra.EnvironmentID == "" {
+		params.Infra.EnvironmentID = params.Infra.Name + "-env"
+	}
+
+	// If the user didn't provide infra-platform-name, then set it to infra-name with a '-platform' suffix.
+	if params.Infra.PlatformName == "" {
+		params.Infra.PlatformName = params.Infra.Name + "-platform"
+	}
+
 	// Set up the request variables
 	variables := Variables{
 		Identifiers: Identifiers{
@@ -34,12 +54,13 @@ func RegisterInfra(params InfraParameters) {
 			Name:             params.Infra.Name,
 			EnvironmentID:    params.Infra.EnvironmentID,
 			Description:      params.Infra.Description,
+			PlatformName:     params.Infra.PlatformName,
 			InfraNamespace:   params.Infra.Namespace,
 			ServiceAccount:   params.Infra.ServiceAccount,
 			InfraScope:       params.InfraScope,
 			InfraNsExists:    params.InfraNsExists,
 			InfraSaExists:    params.Infra.InfraSaExists,
-			InstallationType: params.Infra.InstallationType,
+			InstallationType: "MANIFEST",
 			SkipSsl:          params.Infra.SkipSsl,
 		},
 	}
@@ -51,12 +72,16 @@ func RegisterInfra(params InfraParameters) {
 	}
 
 	// Serialize the payload to JSON
-	body, _ := json.Marshal(payload)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		logrus.Error("Error serializing payload to JSON:", err)
+		return
+	}
 
 	// Create a new HTTP POST request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		logrus.Error("Error creating request:", err)
 		return
 	}
 
@@ -69,12 +94,69 @@ func RegisterInfra(params InfraParameters) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error on response:\n", err)
+		logrus.Error("Error on response:", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	// Read and print the response data
-	data, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(data))
+	// Read the response data
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Error("Error reading response data:", err)
+		return
+	}
+
+	// Parse the response data into the Response struct
+	var responseData Response
+	err = json.Unmarshal(data, &responseData)
+	if err != nil {
+		logrus.Error("Error parsing JSON response:", err)
+		return
+	}
+
+	// Print the token
+	logrus.Info("Token: ", responseData.Data.RegisterInfra.Token)
+}
+
+func ApplyChaosManifest(token string, namespace string, manifest string) {
+
+	clients := clients.ClientSets{}
+
+	//Getting kubeConfig and Generate ClientSets
+	if err := clients.GenerateClientSetFromKubeConfig(); err != nil {
+		logrus.Errorf("Unable to Get the kubeconfig, err: %v", err)
+		return
+	}
+
+	// Get the dynamic client for unstructured objects
+	dynamicClient := clients.DynamicClient
+
+	// Decode the YAML manifest into an unstructured object
+	obj := &unstructured.Unstructured{}
+
+	// Create a new scheme
+	s := runtime.NewScheme()
+
+	// Create the recogniser decoder
+	d := recognizer.NewDecoder(
+		json.NewSerializer(json.DefaultMetaFactory, s, s, false),
+		json.NewYAMLSerializer(json.DefaultMetaFactory, s, s),
+	)
+
+	// Decode YAML to unstructured object
+	if _, _, err := d.Decode([]byte(manifest), nil, obj); err != nil {
+		logrus.Fatal("Error decoding manifest: ", err)
+	}
+
+	// Get the GVR from the object to create a dynamic client for that GVR
+	gvk := obj.GroupVersionKind()
+	gvr, _ := meta.UnsafeGuessKindToResource(gvk)
+
+	// Create the object using the dynamic client
+	_, err := dynamicClient.Resource(gvr).Namespace(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+	if err != nil {
+		logrus.Fatal("Error applying manifest: ", err)
+	}
+
+	logrus.Info("Successfully applied chaos infra manifest to Kubernetes cluster")
 }
