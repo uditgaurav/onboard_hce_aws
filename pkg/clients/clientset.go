@@ -1,7 +1,7 @@
 package clients
 
 import (
-	"flag"
+	"os"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/dynamic"
@@ -43,10 +43,8 @@ func (clientSets *ClientSets) GenerateClientSetFromKubeConfig() error {
 
 // getKubeConfig setup the config for access cluster resource
 func getKubeConfig() (*rest.Config, error) {
-	kubeconfig := flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	flag.Parse()
 	// It uses in-cluster config, if kubeconfig path is not specified
-	config, err := buildConfigFromFlags("", *kubeconfig)
+	config, err := buildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 	return config, err
 }
 

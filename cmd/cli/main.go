@@ -36,6 +36,9 @@ func init() {
 	rootCmd.Flags().StringVar(&params.Infra.PlatformName, "infra-platform-name", "", "Infra Platform Name")
 	rootCmd.Flags().BoolVar(&params.Infra.SkipSsl, "infra-skip-ssl", false, "Skip SSL for Infra")
 
+}
+
+func main() {
 	// Now, mark the necessary flags as required
 	if err := rootCmd.MarkFlagRequired("api-key"); err != nil {
 		logrus.Fatalf("Error marking 'api-key' as required: %v", err)
@@ -49,9 +52,6 @@ func init() {
 	if err := rootCmd.MarkFlagRequired("project"); err != nil {
 		logrus.Fatalf("Error marking 'project' as required: %v", err)
 	}
-}
-
-func main() {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Error(err)
 	}

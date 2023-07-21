@@ -55,7 +55,10 @@ type InfraParameters struct {
 type Response struct {
 	Data struct {
 		RegisterInfra struct {
-			Token string `json:"token"`
+			Token    string `json:"token"`
+			InfraID  string `json:"infraID"`
+			Name     string `json:"name"`
+			Manifest string `json:"manifest"`
 		} `json:"registerInfra"`
 	} `json:"data"`
 }

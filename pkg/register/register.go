@@ -2,9 +2,11 @@ package register
 
 import (
 	"bytes"
+	ejson "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"context"
 
@@ -72,7 +74,7 @@ func RegisterInfra(params InfraParameters) {
 	}
 
 	// Serialize the payload to JSON
-	body, err := json.Marshal(payload)
+	body, err := ejson.Marshal(payload)
 	if err != nil {
 		logrus.Error("Error serializing payload to JSON:", err)
 		return
@@ -108,55 +110,78 @@ func RegisterInfra(params InfraParameters) {
 
 	// Parse the response data into the Response struct
 	var responseData Response
-	err = json.Unmarshal(data, &responseData)
+	err = ejson.Unmarshal(data, &responseData)
 	if err != nil {
 		logrus.Error("Error parsing JSON response:", err)
 		return
 	}
 
-	// Print the token
-	logrus.Info("Token: ", responseData.Data.RegisterInfra.Token)
+	// Print the manifest
+	if responseData.Data.RegisterInfra.Manifest != "" {
+		logrus.Info("Chaos infra Manifest prepared")
+	} else {
+		logrus.Error("Chaos infra Manifest is empty")
+	}
+
+	if err := applyChaosManifest(responseData.Data.RegisterInfra.Token, params.Infra.Namespace, responseData.Data.RegisterInfra.Manifest); err != nil {
+		logrus.Fatal("Failed to create chaos infra manifest: ", err)
+	}
+
 }
 
-func ApplyChaosManifest(token string, namespace string, manifest string) {
-
+func applyChaosManifest(token string, namespace string, manifest string) error {
 	clients := clients.ClientSets{}
 
 	//Getting kubeConfig and Generate ClientSets
 	if err := clients.GenerateClientSetFromKubeConfig(); err != nil {
-		logrus.Errorf("Unable to Get the kubeconfig, err: %v", err)
-		return
+		return fmt.Errorf("Unable to Get the kubeconfig, err: %v", err)
 	}
 
 	// Get the dynamic client for unstructured objects
 	dynamicClient := clients.DynamicClient
 
-	// Decode the YAML manifest into an unstructured object
-	obj := &unstructured.Unstructured{}
-
-	// Create a new scheme
-	s := runtime.NewScheme()
-
-	// Create the recogniser decoder
-	d := recognizer.NewDecoder(
-		json.NewSerializer(json.DefaultMetaFactory, s, s, false),
-		json.NewYAMLSerializer(json.DefaultMetaFactory, s, s),
-	)
-
-	// Decode YAML to unstructured object
-	if _, _, err := d.Decode([]byte(manifest), nil, obj); err != nil {
-		logrus.Fatal("Error decoding manifest: ", err)
+	// Remove first line of the manifest if it contains '---'
+	if strings.HasPrefix(manifest, "---") {
+		lines := strings.Split(manifest, "\n")
+		if len(lines) > 1 {
+			manifest = strings.Join(lines[1:], "\n")
+		} else {
+			manifest = ""
+		}
 	}
 
-	// Get the GVR from the object to create a dynamic client for that GVR
-	gvk := obj.GroupVersionKind()
-	gvr, _ := meta.UnsafeGuessKindToResource(gvk)
+	// Split the manifest into individual resources
+	manifests := strings.Split(manifest, "---")
 
-	// Create the object using the dynamic client
-	_, err := dynamicClient.Resource(gvr).Namespace(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
-	if err != nil {
-		logrus.Fatal("Error applying manifest: ", err)
+	for _, m := range manifests {
+		// Decode the YAML manifest into an unstructured object
+		obj := &unstructured.Unstructured{}
+
+		// Create a new scheme
+		s := runtime.NewScheme()
+
+		// Create the recogniser decoder
+		d := recognizer.NewDecoder(
+			json.NewSerializer(json.DefaultMetaFactory, s, s, false),
+			json.NewYAMLSerializer(json.DefaultMetaFactory, s, s),
+		)
+
+		// Decode YAML to unstructured object
+		if _, _, err := d.Decode([]byte(m), nil, obj); err != nil {
+			return fmt.Errorf("Error decoding manifest: %v", err)
+		}
+
+		// Get the GVR from the object to create a dynamic client for that GVR
+		gvk := obj.GroupVersionKind()
+		gvr, _ := meta.UnsafeGuessKindToResource(gvk)
+
+		// Create the object using the dynamic client
+		_, err := dynamicClient.Resource(gvr).Namespace(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("Error applying manifest: %v", err)
+		}
 	}
 
 	logrus.Info("Successfully applied chaos infra manifest to Kubernetes cluster")
+	return nil
 }

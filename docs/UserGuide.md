@@ -1,21 +1,36 @@
 # Register Harness Chaos Infrastructure
 
-A command-line interface to register a new Harness Chaos infrastructure using a given name, namespace, API key, and account ID.
+A command-line interface to register a new Harness Chaos infrastructure using specific parameters including a given name, namespace, API key, and account ID.
 
 ## Usage
 
 ```code
-$ ./cli register --api-key your_api_key --account-id your_account_id --name your_name --namespace your_namespace
+$ ./cli register --api-key your_api_key --account-id your_account_id --infra-name your_infra_name --project your_project --optional-flags
 ```
 
-## Flags
+### Mandatory Flags
 
 | Flag         | Description                                          | Example                   |
 |--------------|------------------------------------------------------|---------------------------|
 | `--api-key` | API Key for Harness (required) | `--api-key abc123` |
 | `--account-id` | Account ID for Harness (required) | `--account-id def456` |
-| `--name` | Name of the Harness Chaos infrastructure (required) | `--name infra-name` |
-| `--namespace` | Namespace for the Harness Chaos infrastructure (required) | `--namespace infra-namespace` |
+| `--infra-name` | Name of the Harness Chaos infrastructure (required) | `--infra-name infra-name` |
+| `--project` | Project Identifier (required) | `--project project_id` |
+
+### Optional Flags
+
+| Flag                           | Description                                                                                       | Default                                   | Example                                      |
+|--------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------|----------------------------------------------|
+| `--infra-namespace`            | Namespace for the Harness Chaos infrastructure                                                    | "hce"                                     | `--infra-namespace custom-namespace`         |
+| `--organisation`               | Organisation Identifier                                                                           | "default"                                 | `--organisation organisation_id`             |
+| `--infra-scope`                | Infrastructure Scope                                                                              | "namespace"                               | `--infra-scope cluster`                      |
+| `--infra-ns-exists`            | Does infrastructure namespace exist                                                               | true                                      | `--infra-ns-exists false`                    |
+| `--infra-description`          | Infra Description                                                                                 | "Infra for Harness Chaos Testing"         | `--infra-description "custom description"`   |
+| `--infra-service-account`      | Infra Service Account                                                                             | "hce"                                     | `--infra-service-account custom-account`     |
+| `--is-infra-sa-exists`         | Does infrastructure service account exist                                                         | false                                     | `--is-infra-sa-exists true`                  |
+| `--infra-environment-id`       | Infra Environment ID                                                                              | ""                                        | `--infra-environment-id environment_id`      |
+| `--infra-platform-name`        | Infra Platform Name                                                                               | ""                                        | `--infra-platform-name platform_name`        |
+| `--infra-skip-ssl`             | Skip SSL for Infra                                                                                | false                                     | `--infra-skip-ssl true`                      |
 
 ## Description
 
