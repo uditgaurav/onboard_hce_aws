@@ -16,17 +16,9 @@ One notable feature is that the policies required and the exact permissions need
 
 ## Documentation
 
-For a detailed understanding of how to use this CLI utility and learn about the different flags it supports, please refer to our [User Docs](#).
+For a detailed understanding of how to use this CLI utility and learn about the different flags it supports, please refer to our [User Docs](./docs/UserGuide.md).
 
-## Installation
 
-Use the package manager [npm](https://www.npmjs.com/) to install Onboard HCE AWS.
-
-```bash
-npm install onboard-hce-aws
-```
-
-Please refer to the [UserGuide Docs]((./docs/UserGuide.md)) for a comprehensive list of flags, their default values, and their descriptions.
 ---
 
 1. Create chaos infra.
@@ -42,4 +34,5 @@ Please refer to the [UserGuide Docs]((./docs/UserGuide.md)) for a comprehensive 
  - Derive the experiment service account and annotate it with experiment service account.
 
 Check out [userguide.md](./docs/UserGuide.md) for more details.
+
 
