@@ -7,9 +7,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"context"
 
+	"github.com/litmuschaos/litmus-go/pkg/log"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/clients"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -21,18 +24,27 @@ import (
 )
 
 // RegisterInfra is a function to register infrastructure details using the Harness API.
-func RegisterInfra(params InfraParameters) {
+func RegisterInfra(params InfraParameters) error {
+
+	log.InfoWithValues("[Info]: Creating the chaos infra with following details:", logrus.Fields{
+		"ChaosInfra Name":             params.Infra.Name,
+		"ChaosInfra Namespace":        params.Infra.Namespace,
+		"ChoasInfra Scope":            params.InfraScope,
+		"ChaosInfra Service Acccount": params.Infra.ServiceAccount,
+		"Environment":                 params.Infra.Name + "-env",
+	})
+
 	// The API endpoint URL
 	url := fmt.Sprintf("https://app.harness.io/gateway/chaos/manager/api/query?accountIdentifier=%s", params.AccountId)
 
 	// GraphQL mutation query to register infrastructure
 	query := `mutation($identifiers: IdentifiersRequest!, $request: RegisterInfraRequest!) {
-  	registerInfra(identifiers: $identifiers, request: $request) {
-    	token
-    	infraID
-    	name
-    	manifest
-  	}
+		registerInfra(identifiers: $identifiers, request: $request) {
+			token
+			infraID
+			name
+			manifest
+		}
 	}`
 
 	// If the user didn't provide infra-environment-id, then set it to infra-name with a '-env' suffix.
@@ -76,15 +88,13 @@ func RegisterInfra(params InfraParameters) {
 	// Serialize the payload to JSON
 	body, err := ejson.Marshal(payload)
 	if err != nil {
-		logrus.Error("Error serializing payload to JSON:", err)
-		return
+		return errors.Errorf("Error serializing payload to JSON: %v", err)
 	}
 
 	// Create a new HTTP POST request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
-		logrus.Error("Error creating request:", err)
-		return
+		return errors.Errorf("Error creating request: %v", err)
 	}
 
 	// Set the required headers
@@ -96,40 +106,38 @@ func RegisterInfra(params InfraParameters) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logrus.Error("Error on response:", err)
-		return
+		return errors.Errorf("Error on response: %v", err)
+
 	}
 	defer resp.Body.Close()
 
 	// Read the response data
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logrus.Error("Error reading response data:", err)
-		return
+		return errors.Errorf("Error reading response data: %v", err)
 	}
 
 	// Parse the response data into the Response struct
 	var responseData Response
 	err = ejson.Unmarshal(data, &responseData)
 	if err != nil {
-		logrus.Error("Error parsing JSON response:", err)
-		return
+		return errors.Errorf("Error parsing JSON response: %v", err)
 	}
 
-	// Print the manifest
 	if responseData.Data.RegisterInfra.Manifest != "" {
-		logrus.Info("Chaos infra Manifest prepared")
+		log.Info("[Info]: Chaos Infra Manifest prepared")
 	} else {
-		logrus.Error("Chaos infra Manifest is empty")
+		return errors.Errorf("[Info]: The prepared chaos infra manifest is empty")
 	}
 
-	if err := applyChaosManifest(responseData.Data.RegisterInfra.Token, params.Infra.Namespace, responseData.Data.RegisterInfra.Manifest); err != nil {
-		logrus.Fatal("Failed to create chaos infra manifest: ", err)
+	if err := applyChaosManifest(responseData.Data.RegisterInfra.Token, responseData.Data.RegisterInfra.Manifest, responseData.Data.RegisterInfra.InfraID, params); err != nil {
+		return errors.Errorf("Failed to create chaos infra manifest: ", err)
 	}
-
+	return nil
 }
 
-func applyChaosManifest(token string, namespace string, manifest string) error {
+// applyChaosManifest will create the chaosYAML manifest created while registring infra
+func applyChaosManifest(token, manifest, infraID string, params InfraParameters) error {
 	clients := clients.ClientSets{}
 
 	//Getting kubeConfig and Generate ClientSets
@@ -153,6 +161,7 @@ func applyChaosManifest(token string, namespace string, manifest string) error {
 	// Split the manifest into individual resources
 	manifests := strings.Split(manifest, "---")
 
+	log.Info("[Info]: Creating the manifest to install chaos infra")
 	for _, m := range manifests {
 		// Decode the YAML manifest into an unstructured object
 		obj := &unstructured.Unstructured{}
@@ -176,12 +185,148 @@ func applyChaosManifest(token string, namespace string, manifest string) error {
 		gvr, _ := meta.UnsafeGuessKindToResource(gvk)
 
 		// Create the object using the dynamic client
-		_, err := dynamicClient.Resource(gvr).Namespace(namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+		_, err := dynamicClient.Resource(gvr).Namespace(params.Infra.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("Error applying manifest: %v", err)
 		}
 	}
 
-	logrus.Info("Successfully applied chaos infra manifest to Kubernetes cluster")
+	log.Info("[Info]: Successfully applied chaos infra manifest to Kubernetes cluster")
+	if err := waitForChaosInfra(infraID, params); err != nil {
+		return errors.Errorf("failed to get the chaos infra in Connected state, err: $v", err)
+	}
 	return nil
+}
+
+// getChaosInfraState fetches the current state of the chaos infrastructure
+func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
+
+	// The API endpoint URL
+	url := fmt.Sprintf("https://app.harness.io/gateway/chaos/manager/api/query?accountIdentifier=%s", params.AccountId)
+
+	// Define the GraphQL query and variables
+	query := `query GetInfra($infraID: String!, $identifiers: IdentifiersRequest!) {
+			getInfra(infraID: $infraID, identifiers: $identifiers) {
+				infraID
+				name
+				description
+				tags
+				environmentID
+				platformName
+				isActive
+				isInfraConfirmed
+				isRemoved
+				updatedAt
+				createdAt
+				noOfSchedules
+				noOfWorkflows
+				token
+				infraNamespace
+				serviceAccount
+				infraScope
+				infraNsExists
+				infraSaExists
+				installationType
+				k8sConnectorID
+				lastWorkflowTimestamp
+				startTime
+				version
+				createdBy {
+					userID
+					username
+					email
+				}
+				updatedBy {
+					userID
+					username
+					email
+				}
+			}
+		}`
+	variables := map[string]interface{}{
+		"identifiers": map[string]string{
+			"orgIdentifier":     params.Organisation,
+			"accountIdentifier": params.AccountId,
+			"projectIdentifier": params.Project,
+		},
+		"infraID": infraID,
+	}
+
+	// Create the request body
+	reqBody := map[string]interface{}{
+		"query":     query,
+		"variables": variables,
+	}
+	reqBodyBytes, err := ejson.Marshal(reqBody)
+	if err != nil {
+		log.Fatalf("error creating request body: %v", err)
+	}
+
+	// Create a new HTTP POST request
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(reqBodyBytes)))
+	if err != nil {
+		log.Fatalf("error creating request: %v", err)
+	}
+
+	// Set the required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", params.ApiKey)
+
+	// Create an HTTP client and send the request
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("error on response: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response data
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("error reading response data: %v", err)
+	}
+
+	if resp.StatusCode != 200 {
+		log.Fatalf("API request failed with status code: %v", resp.StatusCode)
+	}
+
+	// Parse the response data into the Response struct
+	var responseData struct {
+		Data struct {
+			GetInfra struct {
+				IsActive bool `json:"isActive"`
+			} `json:"getInfra"`
+		} `json:"data"`
+	}
+
+	err = ejson.Unmarshal(data, &responseData)
+	if err != nil {
+		return false, errors.Errorf("error parsing JSON response: %v", err)
+	}
+	return responseData.Data.GetInfra.IsActive, nil
+}
+
+func waitForChaosInfra(infraID string, params InfraParameters) error {
+	timeout := time.After(180 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			return errors.New("timeout reached")
+		case <-ticker.C:
+			result, err := getChaosInfraState(infraID, params)
+			if err != nil {
+				return err
+			}
+			if result {
+				log.Info("The infra is now activated!")
+				return nil
+			}
+			log.Info("The infra is not activated yet")
+		}
+	}
 }

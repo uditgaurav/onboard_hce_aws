@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/register"
@@ -13,7 +15,9 @@ var rootCmd = &cobra.Command{
 	Short: "Register a new Harness Chaos infrastructure",
 	Long:  `A CLI utility to register a new Harness Chaos infrastructure using the given name and namespace.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		register.RegisterInfra(params)
+		if err := register.RegisterInfra(params); err != nil {
+			log.Fatalf("fail to register chaos infra, err: %v", err)
+		}
 	},
 }
 
