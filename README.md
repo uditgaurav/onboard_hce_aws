@@ -1,5 +1,33 @@
-# onboard_hce_aws
+# Onboard Harness Chaos Engineering on AWS CLI Utility
 
+Onboard HCE AWS is a command-line interface (CLI) utility tool that simplifies the process of onboarding on Harness Chaos Engineering (HCE). The users can simply install the chaos infrastructure with just one click using the CLI and the appropriate flags.
+
+This tool aims to not only streamline the onboarding process but also assists in integrating with your AWS account to seamlessly run W experiments. We understand that configuring or authenticating Harness Chaos Engineering with AWS involves multiple steps that could be time-consuming. This utility has been developed to simplify those tasks.
+
+One notable feature is that the policies required and the exact permissions needed to run a certain experiment can also be defined in the CLI as a flag.
+
+## Key Features
+
+- Simplifies the HCE onboarding process
+- Facilitates the integration of your AWS account to run W experiments
+- Defines required policies and permissions as CLI flags
+- Supports different flags with default values (some mandatory and some optional)
+- Compatible with different Windows and Linux versions
+
+## Documentation
+
+For a detailed understanding of how to use this CLI utility and learn about the different flags it supports, please refer to our [User Docs](#).
+
+## Installation
+
+Use the package manager [npm](https://www.npmjs.com/) to install Onboard HCE AWS.
+
+```bash
+npm install onboard-hce-aws
+```
+
+Please refer to the [UserGuide Docs]((./docs/UserGuide.md)) for a comprehensive list of flags, their default values, and their descriptions.
+---
 
 1. Create chaos infra.
  - The chaos infra could be a namespace namespace or cluster scope chaos infra.
