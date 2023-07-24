@@ -5,7 +5,7 @@ A command-line interface to register a new Harness Chaos infrastructure using sp
 ## Usage
 
 ```code
-$ ./cli register --api-key your_api_key --account-id your_account_id --infra-name your_infra_name --project your_project --optional-flags
+$ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id --infra-name your_infra_name --project your_project --optional-flags
 ```
 
 ### Mandatory Flags
