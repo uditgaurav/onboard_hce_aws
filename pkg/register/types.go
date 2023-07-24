@@ -50,6 +50,8 @@ type InfraParameters struct {
 	Infra         InfraDetails
 	InfraScope    string
 	InfraNsExists bool
+	Timeout       int
+	Delay         int
 }
 
 type Response struct {

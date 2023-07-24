@@ -259,13 +259,13 @@ func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
 	}
 	reqBodyBytes, err := ejson.Marshal(reqBody)
 	if err != nil {
-		log.Fatalf("error creating request body: %v", err)
+		return false, errors.Errorf("error creating request body: %v", err)
 	}
 
 	// Create a new HTTP POST request
 	req, err := http.NewRequest("POST", url, strings.NewReader(string(reqBodyBytes)))
 	if err != nil {
-		log.Fatalf("error creating request: %v", err)
+		return false, errors.Errorf("error creating request: %v", err)
 	}
 
 	// Set the required headers
@@ -273,23 +273,17 @@ func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
 	req.Header.Set("x-api-key", params.ApiKey)
 
 	// Create an HTTP client and send the request
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("error on response: %v", err)
+		return false, errors.Errorf("error on response: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// Read the response data
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("error reading response data: %v", err)
-	}
-
-	if resp.StatusCode != 200 {
-		log.Fatalf("API request failed with status code: %v", resp.StatusCode)
+		return false, errors.Errorf("error reading response data: %v", err)
 	}
 
 	// Parse the response data into the Response struct
@@ -308,6 +302,7 @@ func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
 	return responseData.Data.GetInfra.IsActive, nil
 }
 
+// waitForChaosInfra will wait for the chaos infra to get in active state for the given timeout.
 func waitForChaosInfra(infraID string, params InfraParameters) error {
 	timeout := time.After(180 * time.Second)
 	ticker := time.NewTicker(2 * time.Second)
@@ -316,17 +311,17 @@ func waitForChaosInfra(infraID string, params InfraParameters) error {
 	for {
 		select {
 		case <-timeout:
-			return errors.New("timeout reached")
+			return errors.New("timeout reached while waiting for infra")
 		case <-ticker.C:
 			result, err := getChaosInfraState(infraID, params)
 			if err != nil {
 				return err
 			}
 			if result {
-				log.Info("The infra is now activated!")
+				log.Info("[Info]: The infra is now activated!")
 				return nil
 			}
-			log.Info("The infra is not activated yet")
+			log.Info("[Info]: The infra is not activated yet")
 		}
 	}
 }

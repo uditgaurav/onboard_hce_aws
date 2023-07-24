@@ -1,9 +1,7 @@
 package main
 
 import (
-	"log"
-
-	"github.com/sirupsen/logrus"
+	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/register"
 )
@@ -39,24 +37,26 @@ func init() {
 	rootCmd.Flags().StringVar(&params.Infra.EnvironmentID, "infra-environment-id", "", "Infra Environment ID")
 	rootCmd.Flags().StringVar(&params.Infra.PlatformName, "infra-platform-name", "", "Infra Platform Name")
 	rootCmd.Flags().BoolVar(&params.Infra.SkipSsl, "infra-skip-ssl", false, "Skip SSL for Infra")
+	rootCmd.Flags().IntVar(&params.Timeout, "timeout", 180, "Timeout For Infra setup")
+	rootCmd.Flags().IntVar(&params.Delay, "delay", 2, "Delay between checking the status of Infra")
 
 }
 
 func main() {
 	// Now, mark the necessary flags as required
 	if err := rootCmd.MarkFlagRequired("api-key"); err != nil {
-		logrus.Fatalf("Error marking 'api-key' as required: %v", err)
+		log.Fatalf("Error marking 'api-key' as required: %v", err)
 	}
 	if err := rootCmd.MarkFlagRequired("account-id"); err != nil {
-		logrus.Fatalf("Error marking 'account-id' as required: %v", err)
+		log.Fatalf("Error marking 'account-id' as required: %v", err)
 	}
 	if err := rootCmd.MarkFlagRequired("infra-name"); err != nil {
-		logrus.Fatalf("Error marking 'infra-name' as required: %v", err)
+		log.Fatalf("Error marking 'infra-name' as required: %v", err)
 	}
 	if err := rootCmd.MarkFlagRequired("project"); err != nil {
-		logrus.Fatalf("Error marking 'project' as required: %v", err)
+		log.Fatalf("Error marking 'project' as required: %v", err)
 	}
 	if err := rootCmd.Execute(); err != nil {
-		logrus.Error(err)
+		log.Fatalf("Error: %v", err)
 	}
 }

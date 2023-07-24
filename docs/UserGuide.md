@@ -31,10 +31,13 @@ $ ./cli register --api-key your_api_key --account-id your_account_id --infra-nam
 | `--infra-environment-id`       | Infra Environment ID                                                                              | ""                                        | `--infra-environment-id environment_id`      |
 | `--infra-platform-name`        | Infra Platform Name                                                                               | ""                                        | `--infra-platform-name platform_name`        |
 | `--infra-skip-ssl`             | Skip SSL for Infra                                                                                | false                                     | `--infra-skip-ssl true`                      |
+| `--timeout`                    | Timeout For Infra setup                                                                                 | 180                                       | `--timeout 200`                              |
+| `--delay`                      | Delay between checking the status of Infra                                                                                   | 2                                         | `--delay 5`                                  |
+                                 | `--infra-skip-ssl true`                      |
 
 ## Description
 
-This CLI utility is used to register a new chaos infrastructure in a Harness SaaS environment. It uses the provided API key and account ID to authenticate with the Harness API and create a new chaos infrastructure with the given name and namespace.
+This CLI utility is used to register a new chaos infrastructure in a Harness SaaS environment. It uses the provided API key and account ID to authenticate with the Harness API and create a new chaos infrastructure with the given name and namespace. This command-line interface (CLI) streamlines your infrastructure setup process. With just a single command, the CLI will automate the creation of your chaos infrastructure and verify its activation status. The table above lists a variety of flags. Some of these are mandatory, while others are optional. These flags allow you to customize the process of infrastructure creation according to your needs. By selecting the appropriate flags when running the CLI, you can tailor the chaos infrastructure to your specific requirements
 
 The utility makes a POST request to the `https://app.harness.io/gateway/api/graphql?accountId=<account_id>` endpoint with a JSON payload containing the name and namespace for the new infrastructure. The `x-api-key` HTTP header is used for authentication.
 
