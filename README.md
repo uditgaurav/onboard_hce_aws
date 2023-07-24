@@ -1,4 +1,4 @@
-# Onboard Harness Chaos Engineering on AWS CLI Utility
+# Onboard HCE on AWS Using CLI Utility
 
 Onboard HCE AWS is a command-line interface (CLI) utility tool that simplifies the process of onboarding on Harness Chaos Engineering (HCE). The users can simply install the chaos infrastructure with just one click using the CLI and the appropriate flags.
 
@@ -9,15 +9,14 @@ One notable feature is that the policies required and the exact permissions need
 ## Key Features
 
 - Simplifies the HCE onboarding process
-- Facilitates the integration of your AWS account to run W experiments
-- Defines required policies and permissions as CLI flags
-- Supports different flags with default values (some mandatory and some optional)
-- Compatible with different Windows and Linux versions
+- Facilitates the integration of your AWS account to run AWS chaos experiments
+- Defines required policies and permissions as CLI flags and has the ability to create the Roles in AWS.
+- Supports different flags that has the capability to customise the role.
+- The CLI is also compatible with different Windows and Linux versions
 
 ## Documentation
 
 For a detailed understanding of how to use this CLI utility and learn about the different flags it supports, please refer to our [User Docs](./docs/UserGuide.md).
-
 
 ---
 
@@ -34,5 +33,3 @@ For a detailed understanding of how to use this CLI utility and learn about the 
  - Derive the experiment service account and annotate it with experiment service account.
 
 Check out [userguide.md](./docs/UserGuide.md) for more details.
-
-
