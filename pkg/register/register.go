@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/clients"
+	"github.com/uditgaurav/onboard_hce_aws/pkg/types"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,7 +25,7 @@ import (
 )
 
 // RegisterInfra is a function to register infrastructure details using the Harness API.
-func RegisterInfra(params InfraParameters) error {
+func RegisterInfra(params types.OnboardingParameters) error {
 
 	log.InfoWithValues("[Info]: Creating the chaos infra with following details:", logrus.Fields{
 		"ChaosInfra Name":             params.Infra.Name,
@@ -58,13 +59,13 @@ func RegisterInfra(params InfraParameters) error {
 	}
 
 	// Set up the request variables
-	variables := Variables{
-		Identifiers: Identifiers{
+	variables := types.Variables{
+		Identifiers: types.Identifiers{
 			OrgIdentifier:     params.Organisation,
 			AccountIdentifier: params.AccountId,
 			ProjectIdentifier: params.Project,
 		},
-		Request: Request{
+		Request: types.Request{
 			Name:             params.Infra.Name,
 			EnvironmentID:    params.Infra.EnvironmentID,
 			Description:      params.Infra.Description,
@@ -80,7 +81,7 @@ func RegisterInfra(params InfraParameters) error {
 	}
 
 	// Create the payload for the API call
-	payload := Payload{
+	payload := types.Payload{
 		Query:     query,
 		Variables: variables,
 	}
@@ -118,7 +119,7 @@ func RegisterInfra(params InfraParameters) error {
 	}
 
 	// Parse the response data into the Response struct
-	var responseData Response
+	var responseData types.Response
 	err = ejson.Unmarshal(data, &responseData)
 	if err != nil {
 		return errors.Errorf("Error parsing JSON response: %v", err)
@@ -137,7 +138,7 @@ func RegisterInfra(params InfraParameters) error {
 }
 
 // applyChaosManifest will create the chaosYAML manifest created while registring infra
-func applyChaosManifest(token, manifest, infraID string, params InfraParameters) error {
+func applyChaosManifest(token, manifest, infraID string, params types.OnboardingParameters) error {
 	clients := clients.ClientSets{}
 
 	//Getting kubeConfig and Generate ClientSets
@@ -199,7 +200,7 @@ func applyChaosManifest(token, manifest, infraID string, params InfraParameters)
 }
 
 // getChaosInfraState fetches the current state of the chaos infrastructure
-func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
+func getChaosInfraState(infraID string, params types.OnboardingParameters) (bool, error) {
 
 	// The API endpoint URL
 	url := fmt.Sprintf("https://app.harness.io/gateway/chaos/manager/api/query?accountIdentifier=%s", params.AccountId)
@@ -303,7 +304,7 @@ func getChaosInfraState(infraID string, params InfraParameters) (bool, error) {
 }
 
 // waitForChaosInfra will wait for the chaos infra to get in active state for the given timeout.
-func waitForChaosInfra(infraID string, params InfraParameters) error {
+func waitForChaosInfra(infraID string, params types.OnboardingParameters) error {
 	timeout := time.After(180 * time.Second)
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()

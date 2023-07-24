@@ -21,8 +21,8 @@ For a detailed understanding of how to use this CLI utility and learn about the 
 ---
 
 1. Create chaos infra.
- - The chaos infra could be a namespace namespace or cluster scope chaos infra.
- - If it is a cluster based chaos infra then ensure you have access to create ClusterRole and CuusterRoleBinding with namespace.
+ - The chaos infra could be a namespace namespace or cluster scope chaos infra. [Done]
+ - If it is a cluster based chaos infra then ensure you have access to create ClusterRole and CuusterRoleBinding with namespace. [Done]
 
 2. Configure AWS account with chaos role.
  - Create AWS Role in the target account

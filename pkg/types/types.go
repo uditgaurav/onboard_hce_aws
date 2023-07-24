@@ -1,4 +1,4 @@
-package register
+package types
 
 type InfraDetails struct {
 	Name             string
@@ -42,7 +42,7 @@ type Variables struct {
 	Request     Request     `json:"request"`
 }
 
-type InfraParameters struct {
+type OnboardingParameters struct {
 	ApiKey        string
 	AccountId     string
 	Organisation  string
@@ -52,6 +52,11 @@ type InfraParameters struct {
 	InfraNsExists bool
 	Timeout       int
 	Delay         int
+	ProviderUrl   string
+	PolicyArn     string
+	RoleArn       string
+	Mode          string
+	Resources     string
 }
 
 type Response struct {

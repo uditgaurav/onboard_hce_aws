@@ -4,9 +4,10 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/register"
+	"github.com/uditgaurav/onboard_hce_aws/pkg/types"
 )
 
-var params register.InfraParameters
+var params types.OnboardingParameters
 
 var rootCmd = &cobra.Command{
 	Use:   "register",
@@ -39,6 +40,13 @@ func init() {
 	rootCmd.Flags().BoolVar(&params.Infra.SkipSsl, "infra-skip-ssl", false, "Skip SSL for Infra")
 	rootCmd.Flags().IntVar(&params.Timeout, "timeout", 180, "Timeout For Infra setup")
 	rootCmd.Flags().IntVar(&params.Delay, "delay", 2, "Delay between checking the status of Infra")
+
+	// Flags for aws setup
+	rootCmd.Flags().StringVar(&params.ProviderUrl, "provider-url", "", "Provider URL")
+	rootCmd.Flags().StringVar(&params.PolicyArn, "policy-arn", "", "Policy ARN")
+	rootCmd.Flags().StringVar(&params.RoleArn, "role-arn", "", "Role ARN")
+	rootCmd.Flags().StringVar(&params.Mode, "mode", "", "Mode")
+	rootCmd.Flags().StringVar(&params.Resources, "resources", "", "Resources")
 
 }
 
