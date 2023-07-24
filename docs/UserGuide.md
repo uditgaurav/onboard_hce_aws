@@ -31,9 +31,9 @@ $ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id
 | `--infra-environment-id`       | Infra Environment ID                                                                              | ""                                        | `--infra-environment-id environment_id`      |
 | `--infra-platform-name`        | Infra Platform Name                                                                               | ""                                        | `--infra-platform-name platform_name`        |
 | `--infra-skip-ssl`             | Skip SSL for Infra                                                                                | false                                     | `--infra-skip-ssl true`                      |
-| `--timeout`                    | Timeout For Infra setup                                                                                 | 180                                       | `--timeout 200`                              |
-| `--delay`                      | Delay between checking the status of Infra                                                                                   | 2                                         | `--delay 5`                                  |
-                                 | `--infra-skip-ssl true`                      |
+| `--timeout`                    | Timeout For Infra setup                                                                           | 180                                       | `--timeout 200`                              |
+| `--delay`                      | Delay between checking the status of Infra                                                        | 2                                         | `--delay 5`                                  |
+
 
 ## Description
 
