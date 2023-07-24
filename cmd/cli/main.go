@@ -1,9 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/spf13/cobra"
-	"github.com/uditgaurav/onboard_hce_aws/pkg/register"
+	"github.com/uditgaurav/onboard_hce_aws/execute"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/types"
 )
 
@@ -11,11 +13,15 @@ var params types.OnboardingParameters
 
 var rootCmd = &cobra.Command{
 	Use:   "register",
-	Short: "Register a new Harness Chaos infrastructure",
-	Long:  `A CLI utility to register a new Harness Chaos infrastructure using the given name and namespace.`,
+	Short: "Register a new Harness Chaos infrastructure with AWS",
+	Long:  `A CLI utility to register a new Harness Chaos infrastructure with AWS account.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := register.RegisterInfra(params); err != nil {
-			log.Fatalf("fail to register chaos infra, err: %v", err)
+		if err := os.Setenv("KUBECONFIG", params.KubeConfigPath); err != nil {
+			log.Fatalf("Failed to set KUBECONFIG environment variable, err: %v", err)
+		}
+
+		if err := execute.Execute(params); err != nil {
+			log.Fatalf("fail to register chaos infra with aws, err: %v", err)
 		}
 	},
 }
@@ -43,10 +49,12 @@ func init() {
 
 	// Flags for aws setup
 	rootCmd.Flags().StringVar(&params.ProviderUrl, "provider-url", "", "Provider URL")
-	rootCmd.Flags().StringVar(&params.PolicyArn, "policy-arn", "", "Policy ARN")
-	rootCmd.Flags().StringVar(&params.RoleArn, "role-arn", "", "Role ARN")
+	rootCmd.Flags().StringVar(&params.RoleName, "role-name", "", "Role Name")
 	rootCmd.Flags().StringVar(&params.Mode, "mode", "", "Mode")
 	rootCmd.Flags().StringVar(&params.Resources, "resources", "", "Resources")
+	rootCmd.Flags().StringVar(&params.Region, "region", "", "Target AWS Region")
+	rootCmd.Flags().StringVar(&params.ExperimentServiceAccountName, "service-account", "litmus-admin", "Experiment Service Account Name")
+	rootCmd.Flags().StringVar(&params.KubeConfigPath, "kubeconfig-path", "", "Path to the kubeconfig file")
 
 }
 

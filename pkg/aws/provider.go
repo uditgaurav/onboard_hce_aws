@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"crypto/sha1"
@@ -13,12 +13,15 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/cloud/aws/common"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/pkg/errors"
+	hce_types "github.com/uditgaurav/onboard_hce_aws/pkg/types"
 )
 
 // ConnectOIDCProvider will connect the provided OIDC provider in the AWS account
-func ConnectOIDCProvider(providerURL, clientID, region string) error {
+func ConnectOIDCProvider(onboardingParams hce_types.OnboardingParameters) error {
 
-	thumbprint, err := getThumbprint(providerURL)
+	clientID := "sts.amazonaws.com"
+
+	thumbprint, err := getThumbprint(onboardingParams.ProviderUrl)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -26,11 +29,11 @@ func ConnectOIDCProvider(providerURL, clientID, region string) error {
 	log.Info("[Info]: The thumbprint is created successfully")
 
 	// Load session from shared config
-	sess := common.GetAWSSession(region)
+	sess := common.GetAWSSession(onboardingParams.Region)
 
 	svc := iam.New(sess)
 	params := &iam.CreateOpenIDConnectProviderInput{
-		Url: aws.String(providerURL),
+		Url: aws.String(onboardingParams.ProviderUrl),
 		ThumbprintList: []*string{
 			aws.String(thumbprint),
 		},
@@ -43,7 +46,8 @@ func ConnectOIDCProvider(providerURL, clientID, region string) error {
 	if err != nil {
 		return errors.Errorf("Error creating OIDC provider: %v", err)
 	}
-	log.Infof("[Info]: OIDC provider created with ARN: %v", result.OpenIDConnectProviderArn)
+	log.Infof("[Info]: OIDC provider created with ARN: %v", *result.OpenIDConnectProviderArn)
+	onboardingParams.ProviderARN = *result.OpenIDConnectProviderArn
 	return nil
 }
 

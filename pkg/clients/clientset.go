@@ -10,7 +10,6 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/klog"
 )
 
 // ClientSets is a collection of clientSets and kubeConfig needed
@@ -43,8 +42,13 @@ func (clientSets *ClientSets) GenerateClientSetFromKubeConfig() error {
 
 // getKubeConfig setup the config for access cluster resource
 func getKubeConfig() (*rest.Config, error) {
+	kubeconfig := os.Getenv("KUBECONFIG")
+	// If KUBECONFIG is not specified, look at the default location
+	if kubeconfig == "" {
+		kubeconfig = os.Getenv("HOME") + "/.kube/config"
+	}
 	// It uses in-cluster config, if kubeconfig path is not specified
-	config, err := buildConfigFromFlags("", os.Getenv("KUBECONFIG"))
+	config, err := buildConfigFromFlags("", kubeconfig)
 	return config, err
 }
 
@@ -65,7 +69,6 @@ func buildConfigFromFlags(masterUrl, kubeconfigPath string) (*restclient.Config,
 		if err == nil {
 			return kubeconfig, nil
 		}
-		klog.Warningf("Neither --kubeconfig nor --master was specified.  Using the inClusterConfig. Error creating inClusterConfig: %v", err)
 	}
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},

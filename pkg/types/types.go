@@ -43,20 +43,24 @@ type Variables struct {
 }
 
 type OnboardingParameters struct {
-	ApiKey        string
-	AccountId     string
-	Organisation  string
-	Project       string
-	Infra         InfraDetails
-	InfraScope    string
-	InfraNsExists bool
-	Timeout       int
-	Delay         int
-	ProviderUrl   string
-	PolicyArn     string
-	RoleArn       string
-	Mode          string
-	Resources     string
+	ApiKey                       string
+	AccountId                    string
+	Organisation                 string
+	Project                      string
+	Infra                        InfraDetails
+	InfraScope                   string
+	InfraNsExists                bool
+	Timeout                      int
+	Delay                        int
+	ProviderUrl                  string
+	ProviderARN                  string
+	RoleName                     string
+	RoleARN                      string
+	Mode                         string
+	Resources                    string
+	Region                       string
+	ExperimentServiceAccountName string
+	KubeConfigPath               string
 }
 
 type Response struct {
