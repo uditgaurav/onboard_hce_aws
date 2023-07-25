@@ -26,10 +26,14 @@ $ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id
 | `--infra-name` | Name of the Harness Chaos infrastructure (required) | `--infra-name infra-name` |
 | `--project` | Project Identifier (required) | `--project project_id` |
 
-### Other Flags
+### Harness and Infra Details
 
 | Flag                           | Description                                                                                       | Default                                   | Example                                      |
 |--------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------|----------------------------------------------|
+| `--api-key`                    | API Key for Harness                                                                               | ""                                        | `--api-key your-api-key`                     |
+| `--account-id`                 | Account ID for Harness                                                                            | ""                                        | `--account-id your-account-id`               |
+| `--infra-name`                 | Name of the Harness Chaos infrastructure                                                          | ""                                        | `--infra-name your-infra-name`               |
+| `--project`                    | Project Identifier                                                                                | ""                                        | `--project your-project-id`                  |
 | `--infra-namespace`            | Namespace for the Harness Chaos infrastructure                                                    | "hce"                                     | `--infra-namespace custom-namespace`         |
 | `--organisation`               | Organisation Identifier                                                                           | "default"                                 | `--organisation organisation_id`             |
 | `--infra-scope`                | Infrastructure Scope                                                                              | "namespace"                               | `--infra-scope cluster`                      |
@@ -42,6 +46,24 @@ $ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id
 | `--infra-skip-ssl`             | Skip SSL for Infra                                                                                | false                                     | `--infra-skip-ssl true`                      |
 | `--timeout`                    | Timeout For Infra setup                                                                           | 180                                       | `--timeout 200`                              |
 | `--delay`                      | Delay between checking the status of Infra                                                        | 2                                         | `--delay 5`                                  |
+| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config config.json`                       |
+
+
+
+### AWS Details
+
+| Flag                           | Description                                                                                       | Default                                   | Example                                      |
+|--------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------|----------------------------------------------|
+| `--provider-url`               | Provider URL                                                                                      | ""                                        | `--provider-url https://provider.com`        |
+| `--role-name`                  | Role Name                                                                                         | ""                                        | `--role-name example_role`                   |
+| `--resources`                  | Resources                                                                                         | "all"                                     | `--resources ec2-state,rds,lambda`           |
+| `--region`                     | Target AWS Region                                                                                 | ""                                        | `--region us-east-2`                         |
+| `--service-account`            | Experiment Service Account Name                                                                   | "litmus-admin"                            | `--service-account custom-account`           |
+| `--kubeconfig-path`            | Path to the kubeconfig file                                                                       | ""                                        | `--kubeconfig-path /path/to/kubeconfig`      |
+| `--actions`                    | Actions that are performed by this CLI                                                            | "all"                                     | `--actions create`                           |
+| `--aws-credential-file`        | Path To The AWS Credential File (default $HOME/.aws/credentials)                                  | ""                                        | `--aws-credential-file /path/to/credentials` |
+| `--aws-profile`                | Provide the AWS profile (Default 'default')                                                       | "default"                                 | `--aws-profile custom-profile`               |
+| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config config.json`                       |
 
 
 ## Description

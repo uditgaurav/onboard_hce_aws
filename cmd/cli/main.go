@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -10,27 +13,55 @@ import (
 )
 
 var params types.OnboardingParameters
+var configFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "register",
 	Short: "Register a new Harness Chaos infrastructure with AWS",
 	Long:  `A CLI utility to register a new Harness Chaos infrastructure with AWS account.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := os.Setenv("KUBECONFIG", params.KubeConfigPath); err != nil {
-			log.Fatalf("Failed to set KUBECONFIG environment variable, err: %v", err)
-		}
+		// Check if config file flag is provided
+		if configFile != "" {
+			// Read from the config file
+			configBytes, err := ioutil.ReadFile(configFile)
+			if err != nil {
+				log.Fatalf("Unable to read config file: %v", err)
+			}
 
-		if err := execute.Execute(params); err != nil {
-			log.Fatalf("fail to register chaos infra with aws, err: %v", err)
+			// Unmarshal JSON into params slice
+			var paramsSlice []types.OnboardingParameters
+			err = json.Unmarshal(configBytes, &paramsSlice)
+			if err != nil {
+				log.Fatalf("Unable to parse config JSON: %v", err)
+			}
+
+			// Iterate over each item in the paramsSlice
+			for _, params := range paramsSlice {
+				// Call the function using the params from the JSON
+				registerInfra(params)
+			}
+		} else {
+			// Call the function using the params from the flags
+			registerInfra(params)
 		}
 	},
 }
 
+func registerInfra(params types.OnboardingParameters) {
+	if err := os.Setenv("KUBECONFIG", params.KubeConfigPath); err != nil {
+		log.Fatalf("Failed to set KUBECONFIG environment variable, err: %v", err)
+	}
+
+	if err := execute.Execute(params); err != nil {
+		log.Fatalf("fail to register chaos infra with aws, err: %v", err)
+	}
+}
+
 func init() {
-	rootCmd.Flags().StringVar(&params.ApiKey, "api-key", "", "API Key for Harness (required)")
-	rootCmd.Flags().StringVar(&params.AccountId, "account-id", "", "Account ID for Harness (required)")
-	rootCmd.Flags().StringVar(&params.Infra.Name, "infra-name", "", "Name of the Harness Chaos infrastructure (required)")
-	rootCmd.Flags().StringVar(&params.Project, "project", "", "Project Identifier (required)")
+	rootCmd.Flags().StringVar(&params.ApiKey, "api-key", "", "API Key for Harness")
+	rootCmd.Flags().StringVar(&params.AccountId, "account-id", "", "Account ID for Harness")
+	rootCmd.Flags().StringVar(&params.Infra.Name, "infra-name", "", "Name of the Harness Chaos infrastructure")
+	rootCmd.Flags().StringVar(&params.Project, "project", "", "Project Identifier")
 
 	// Default value for infra-environment-id and infra-platform-name is calculated in RegisterInfra based on infra-name
 
@@ -50,28 +81,30 @@ func init() {
 	// Flags for aws setup
 	rootCmd.Flags().StringVar(&params.ProviderUrl, "provider-url", "", "Provider URL")
 	rootCmd.Flags().StringVar(&params.RoleName, "role-name", "", "Role Name")
-	rootCmd.Flags().StringVar(&params.Resources, "resources", "", "Resources")
+	rootCmd.Flags().StringVar(&params.Resources, "resources", "all", "Resources")
 	rootCmd.Flags().StringVar(&params.Region, "region", "", "Target AWS Region")
 	rootCmd.Flags().StringVar(&params.ExperimentServiceAccountName, "service-account", "litmus-admin", "Experiment Service Account Name")
 	rootCmd.Flags().StringVar(&params.KubeConfigPath, "kubeconfig-path", "", "Path to the kubeconfig file")
 	rootCmd.Flags().StringVar(&params.Actions, "actions", "all", "Actions that are performed by this cli. (Default all)")
+	rootCmd.Flags().StringVar(&params.AWSCredentialFile, "aws-credential-file", "", "Path To The AWS Credential File (default $HOME/.aws/credentials)")
+	rootCmd.Flags().StringVar(&params.AWSProfile, "aws-profile", "default", "Provide the AWS profile (Default 'default')")
+	rootCmd.Flags().StringVar(&configFile, "config", "", "Config file containing parameters")
 
+	if params.AWSCredentialFile == "" {
+		params.AWSCredentialFile = fmt.Sprintf("%s/.aws/credentials", os.Getenv("HOME"))
+	}
+
+	if err := os.Setenv("AWS_SHARED_CREDENTIALS_FILE", params.AWSCredentialFile); err != nil {
+		log.Fatalf("Failed to set AWS_SHARED_CREDENTIALS_FILE environment variable, err: %v", err)
+	}
+
+	// Set the AWS_PROFILE environment variable
+	if err := os.Setenv("AWS_PROFILE", params.AWSProfile); err != nil {
+		log.Fatalf("Failed to set AWS_PROFILE environment variable, err: %v", err)
+	}
 }
 
 func main() {
-	// Now, mark the necessary flags as required
-	if err := rootCmd.MarkFlagRequired("api-key"); err != nil {
-		log.Fatalf("Error marking 'api-key' as required: %v", err)
-	}
-	if err := rootCmd.MarkFlagRequired("account-id"); err != nil {
-		log.Fatalf("Error marking 'account-id' as required: %v", err)
-	}
-	if err := rootCmd.MarkFlagRequired("infra-name"); err != nil {
-		log.Fatalf("Error marking 'infra-name' as required: %v", err)
-	}
-	if err := rootCmd.MarkFlagRequired("project"); err != nil {
-		log.Fatalf("Error marking 'project' as required: %v", err)
-	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalf("Error: %v", err)
 	}

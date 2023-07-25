@@ -61,6 +61,8 @@ type OnboardingParameters struct {
 	ExperimentServiceAccountName string
 	KubeConfigPath               string
 	Actions                      string
+	AWSCredentialFile            string
+	AWSProfile                   string
 }
 
 type Response struct {
