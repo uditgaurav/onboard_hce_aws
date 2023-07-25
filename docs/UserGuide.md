@@ -46,7 +46,7 @@ $ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id
 | `--infra-skip-ssl`             | Skip SSL for Infra                                                                                | false                                     | `--infra-skip-ssl true`                      |
 | `--timeout`                    | Timeout For Infra setup                                                                           | 180                                       | `--timeout 200`                              |
 | `--delay`                      | Delay between checking the status of Infra                                                        | 2                                         | `--delay 5`                                  |
-| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config config.json`                       |
+| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config register.json`                       |
 
 
 
@@ -63,7 +63,7 @@ $ ./onboard_hce_aws register --api-key your_api_key --account-id your_account_id
 | `--actions`                    | Actions that are performed by this CLI                                                            | "all"                                     | `--actions create`                           |
 | `--aws-credential-file`        | Path To The AWS Credential File (default $HOME/.aws/credentials)                                  | ""                                        | `--aws-credential-file /path/to/credentials` |
 | `--aws-profile`                | Provide the AWS profile (Default 'default')                                                       | "default"                                 | `--aws-profile custom-profile`               |
-| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config config.json`                       |
+| `--config`                     | Config file containing parameters                                                                 | ""                                        | `--config register.json`                       |
 
 
 ## Description
@@ -112,5 +112,56 @@ You have the option to run the CLI in different modes using the `--actions` flag
 | `only_annotate`      | The CLI only annotates the experiment service account with roleARN and skips all other steps.|
 
 
-To use these modes, include the`--actions` flag in your command with your chosen parameter. 
+To use these modes, include the`--actions` flag in your command with your chosen parameter.
 
+## Config File Usage
+
+
+As an alternative to the numerous flag inputs, this CLI tool also offers an option to utilize a configuration file using the `--config` flag. This flag expects a path to a JSON configuration file containing all parameters required for the registration process.
+
+
+```bash
+$ ./onboard_hce_aws register --config register.json
+```
+
+In your configuration file, you can include all the relevant parameters as key-value pairs. Here's an example of what your configuration file could look like:
+
+```json
+[{
+    "apiKey": "your_api_key",
+    "accountId": "your_account_id",
+    "infra": {
+        "name": "your_infra_name",
+        "namespace": "hce",
+        "description": "Infra for Harness Chaos Testing",
+        "serviceAccount": "hce",
+        "infraSaExists": false,
+        "environmentID": "",
+        "platformName": "",
+        "skipSsl": false
+    },
+    "project": "",
+    "infraScope": "namespace",
+    "infraNsExists": true,
+    "organisation": "default",
+    "timeout": 180,
+    "delay": 2,
+    "providerUrl": "",
+    "roleName": "",
+    "resources": "",
+    "region": "",
+    "experimentServiceAccountName": "litmus-admin",
+    "kubeConfigPath": "",
+    "actions": "all",
+    "awsCredentialFile": "",
+    "awsProfile": "default"
+}]
+```
+
+Using a configuration file has numerous benefits. Primarily, it provides a cleaner command line experience by significantly reducing the length of the command you need to execute, thus eliminating the necessity to remember lengthy flag inputs. This enables you to set your configuration parameters in a standalone, reusable, and version-controllable format, thereby improving code manageability.
+
+Additionally, it's more conducive to automation scenarios such as in CI/CD pipelines. In such environments, you may want to source your configuration from a file that's dynamically populated based on the pipeline's environment variables or other context.
+
+A further advantage of the config file approach is its ability to facilitate the onboarding of multiple infrastructures simultaneously. By providing each infrastructure's onboarding details as an item in the JSON array, you can automate the process of setting up several environments concurrently.
+
+Finally, the use of a configuration file can serve as self-documented code, explicitly demonstrating the expected inputs for your command. This feature significantly enhances readability and understandability for other developers or operators who interact with your code, fostering a more collaborative and efficient work environment.
