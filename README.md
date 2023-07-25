@@ -19,4 +19,4 @@ For a comprehensive understanding of how to leverage this CLI utility and learn 
 
 ## ⚙️ Installation & Usage
 
-Please refer to the [Installation Guide](./docs/InstallationGuide.md) and [Usage Guide](./docs/UserGuide.md.md) for detailed instructions on setting up and using Onboard HCE AWS.
+Please refer to the [Installation Guide](./docs/InstallationGuide.md) and [Usage Guide](./docs/UserGuide.md) for detailed instructions on setting up and using Onboard HCE AWS.
