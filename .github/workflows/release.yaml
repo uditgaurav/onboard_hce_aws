@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:   
+      release_tag:
+        description: 'release tag'
+        required: true
+      release_title:
+        description: 'release title'
+        required: false
+      release_notes:
+        description: 'release notes'     
+        required: false
+        default: ''
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Go Environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Build go binary
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o build/cli-linux-amd64 ./cmd/cli
+          GOOS=linux GOARCH=386 go build -o build/cli-linux-386 ./cmd/cli
+          GOOS=darwin GOARCH=amd64 go build -o build/cli-darwin-amd64 ./cmd/cli
+          GOOS=darwin GOARCH=arm64 go build -o build/cli-darwin-arm64 ./cmd/cli
+          GOOS=windows GOARCH=amd64 go build -o build/cli-windows-amd64 ./cmd/cli
+          
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          release_name: ${{ github.event.inputs.release_title }}
+          body: ${{ github.event.inputs.release_notes }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/cli-linux-amd64
+          asset_name: cli-linux-amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/cli-linux-386
+          asset_name: cli-linux-386
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/cli-darwin-amd64
+          asset_name: cli-darwin-amd64
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/cli-darwin-arm64
+          asset_name: cli-darwin-arm64
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/cli-windows-amd64
+          asset_name: cli-windows-amd64
+          asset_content_type: application/octet-stream
