@@ -34,61 +34,11 @@ jobs:
           GOOS=darwin GOARCH=arm64 go build -o build/cli-darwin-arm64 ./cmd/cli
           GOOS=windows GOARCH=amd64 go build -o build/cli-windows-amd64 ./cmd/cli
           
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: create release along with artifact
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          release_name: ${{ github.event.inputs.release_title }}
-          body: ${{ github.event.inputs.release_notes }}
-          draft: false
-          prerelease: false
-
-            
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/cli-linux-amd64
-          asset_name: cli-linux-amd64
-          asset_content_type: application/octet-stream
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/cli-linux-386
-          asset_name: cli-linux-386
-          asset_content_type: application/octet-stream
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/cli-darwin-amd64
-          asset_name: cli-darwin-amd64
-          asset_content_type: application/octet-stream
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/cli-darwin-arm64
-          asset_name: cli-darwin-arm64
-          asset_content_type: application/octet-stream
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/cli-windows-amd64
-          asset_name: cli-windows-amd64
-          asset_content_type: application/octet-stream
+          artifacts: "build/*"
+          body: "${{ github.event.inputs.release_notes }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "${{ github.event.inputs.release_title }}"
+          tag: ${{ github.event.inputs.release_tag }}
