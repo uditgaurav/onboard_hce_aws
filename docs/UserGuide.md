@@ -158,10 +158,72 @@ In your configuration file, you can include all the relevant parameters as key-v
 }]
 ```
 
-Using a configuration file has numerous benefits. Primarily, it provides a cleaner command line experience by significantly reducing the length of the command you need to execute, thus eliminating the necessity to remember lengthy flag inputs. This enables you to set your configuration parameters in a standalone, reusable, and version-controllable format, thereby improving code manageability.
+- Using a configuration file has numerous benefits. Primarily, it provides a cleaner command line experience by significantly reducing the length of the command you need to execute, thus eliminating the necessity to remember lengthy flag inputs. This enables you to set your configuration parameters in a standalone, reusable, and version-controllable format, thereby improving code manageability.
 
-Additionally, it's more conducive to automation scenarios such as in CI/CD pipelines. In such environments, you may want to source your configuration from a file that's dynamically populated based on the pipeline's environment variables or other context.
+- Additionally, it's more conducive to automation scenarios such as in CI/CD pipelines. In such environments, you may want to source your configuration from a file that's dynamically populated based on the pipeline's environment variables or other context.
 
-A further advantage of the config file approach is its ability to facilitate the onboarding of multiple infrastructures simultaneously. By providing each infrastructure's onboarding details as an item in the JSON array, you can automate the process of setting up several environments concurrently.
+- A further advantage of the config file approach is its ability to facilitate the onboarding of multiple infrastructures simultaneously. By providing each infrastructure's onboarding details as an item in the JSON array, you can automate the process of setting up several environments concurrently.
 
-Finally, the use of a configuration file can serve as self-documented code, explicitly demonstrating the expected inputs for your command. This feature significantly enhances readability and understandability for other developers or operators who interact with your code, fostering a more collaborative and efficient work environment.
+- Finally, the use of a configuration file can serve as self-documented code, explicitly demonstrating the expected inputs for your command. This feature significantly enhances readability and understandability for other developers or operators who interact with your code, fostering a more collaborative and efficient work environment.
+
+## Examples
+
+- **Command for executing the full onboarding process**
+
+Utilize this command to carry out the comprehensive onboarding process. This process includes the creation of a chaos infrastructure, adding an OIDC provider in the target account, establishing an AWS policy along with a role, and finally annotating the experiment service account with the Role ARN.
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources>
+```
+
+- **Command for executing the full onboarding process with a predefined AWS Role**
+
+This command is also utilized to carry out the comprehensive onboarding process. However, in this case, the command-line interface (CLI) won't establish the policy and RoleARN, presuming that the user already possesses the AWS role for chaos. Instead, it will simply add the identity provider to the role. In this scenario, we define one additional flag: `--role-name`.
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources> --role-name <you-aws-chaos-role-name>
+```
+
+- **Command to solely install the chaos infrastructure**
+
+Use this command when you want to focus exclusively on the installation of the chaos infrastructure, ensuring proper validation for infra activation.
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+```
+
+- **Command to just perform the AWS operations**
+
+This command will be used to perform only the AWS operations that is adding the provider, creating or updating the role based on the provided `--role-name`.
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+```
+
+- **Command to solely execute the annotation**
+
+Use this command when you only want to execute the annotation of the experiment service account with the target AWS role, to authenticate the service account with HCE (Harness Chaos Engine).
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+```
+
+- **Command for executing both the infra installation and AWS operation**
+
+This command allows for the execution of both the chaos infrastructure installation and the AWS operations. The latter involves adding the provider and creating or updating roles.
+
+```bash
+onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources> --role-name <you-aws-chaos-role-name>
+```
+
+
+- **Command to utilize a configuration JSON file for running the CLI**
+
+This command obtains all input from a JSON file and executes the comprehensive onboarding process.
+
+```bash
+onboard_hce_aws register --config register.json
+```
+
+Please refer to the aforementioned section for the structure and details of `register.json`.
+
