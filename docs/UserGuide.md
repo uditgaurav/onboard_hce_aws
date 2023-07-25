@@ -223,7 +223,6 @@ This command obtains all input from a JSON file and executes the comprehensive o
 
 ```bash
 onboard_hce_aws register --config register.json
+
 ```
-
 Please refer to the aforementioned section for the structure and details of `register.json`.
-
