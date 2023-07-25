@@ -39,6 +39,6 @@ jobs:
         with:
           artifacts: "build/*"
           body: "${{ github.event.inputs.release_notes }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           name: "${{ github.event.inputs.release_title }}"
           tag: ${{ github.event.inputs.release_tag }}
