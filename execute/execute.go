@@ -9,33 +9,84 @@ import (
 	"github.com/uditgaurav/onboard_hce_aws/pkg/types"
 )
 
-// Execute is the main function which is responsible for the whole onboarding process. It takes OnboardingParameters as an argument.
 func Execute(params types.OnboardingParameters) error {
-	// RegisterInfra is a function to register the ChaosInfra.
-	if err := register.RegisterInfra(params); err != nil {
-		return errors.Errorf("failed to register ChaosInfra, err: %v", err)
+	// Create a new ClientSets
+	clients := &clients.ClientSets{}
+
+	// Initialize KubeClient
+	if err := clients.GenerateClientSetFromKubeConfig(); err != nil {
+		return errors.Errorf("Failed to initialize KubeClient: %v", err)
 	}
 
-	// ConnectOIDCProvider is a function to connect to the OIDC provider.
-	if err := aws.ConnectOIDCProvider(params); err != nil {
-		return errors.Errorf("failed to connect OIDC provider, err: %v", err)
-	}
+	switch params.Actions {
 
-	// PreparePolicyAndCreateRole and CreateRoleWithTrustRelationsip are functions to create IAM roles in AWS.
-	if params.RoleName == "" {
-		if err := aws.PreparePolicyAndCreateRole(params); err != nil {
-			return errors.Errorf("failed to create policy and role, err: %v", err)
+	case "all":
+		if err := register.RegisterInfra(params); err != nil {
+			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
 		}
-	} else {
-		if err := aws.CreateRoleWithTrustRelationsip("", params); err != nil {
-			return errors.Errorf("failed to create role, err: %v", err)
+		providerARN, err := aws.ConnectOIDCProvider(params)
+		if err != nil {
+			return errors.Errorf("failed to connect OIDC provider, err: %v", err)
 		}
-	}
+		params.ProviderARN = providerARN
+		if params.RoleName == "" {
+			if err := aws.PreparePolicyAndCreateRole(params); err != nil {
+				return errors.Errorf("failed to create policy and role, err: %v", err)
+			}
+		} else {
+			if err := aws.CreateRoleWithTrustRelationsip("", params); err != nil {
+				return errors.Errorf("failed to create role, err: %v", err)
+			}
+		}
+		if err := kubernetes.AnnotateServiceAccount(params, *clients); err != nil {
+			return errors.Errorf("failed to annotate experiment service account with role arn, err: %v", err)
+		}
 
-	// AnnotateServiceAccount is a function to annotate a Kubernetes ServiceAccount with the ARN of the created IAM role.
-	if err := kubernetes.AnnotateServiceAccount(params, clients.ClientSets{}); err != nil {
-		return errors.Errorf("failed to annotate experiment service account with role arn, err: %v", err)
-	}
+	case "only_install":
 
+		if err := register.RegisterInfra(params); err != nil {
+			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
+		}
+
+	case "install_with_provider":
+
+		if err := register.RegisterInfra(params); err != nil {
+			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
+		}
+		providerARN, err := aws.ConnectOIDCProvider(params)
+		if err != nil {
+			return errors.Errorf("failed to connect OIDC provider, err: %v", err)
+		}
+		params.ProviderARN = providerARN
+		if params.RoleName == "" {
+			if err := aws.PreparePolicyAndCreateRole(params); err != nil {
+				return errors.Errorf("failed to create policy and role, err: %v", err)
+			}
+		} else {
+			if err := aws.CreateRoleWithTrustRelationsip("", params); err != nil {
+				return errors.Errorf("failed to create role, err: %v", err)
+			}
+		}
+
+	case "only_provider":
+		providerARN, err := aws.ConnectOIDCProvider(params)
+		if err != nil {
+			return errors.Errorf("failed to connect OIDC provider, err: %v", err)
+		}
+		params.ProviderARN = providerARN
+		if params.RoleName == "" {
+			if err := aws.PreparePolicyAndCreateRole(params); err != nil {
+				return errors.Errorf("failed to create policy and role, err: %v", err)
+			}
+		} else {
+			if err := aws.CreateRoleWithTrustRelationsip("", params); err != nil {
+				return errors.Errorf("failed to create role, err: %v", err)
+			}
+		}
+
+	default:
+		return errors.Errorf("invalid action: %s", params.Actions)
+
+	}
 	return nil
 }

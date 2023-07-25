@@ -112,14 +112,18 @@ func PreparePolicyAndCreateRole(params types.OnboardingParameters) error {
 		combinedPolicy.Statement = append(combinedPolicy.Statement, Statement{Effect: "Allow", Action: []string{action}, Resource: "*"})
 	}
 
-	log.Infof("[Info]: Prepared policy: %+v", combinedPolicy)
+	policyJson, err := json.MarshalIndent(combinedPolicy, "", "  ")
+	if err != nil {
+		return errors.Errorf("failed to prepare policy JSON, err: %v", err)
+	}
+	log.Info(string(policyJson))
+
 	policyARN, err := createPolicy(combinedPolicy, policyName, params.Region)
 	if err != nil {
 		return err
 	}
 
 	log.Infof("[Info]: The policy is successfully created")
-	log.Infof("[Info]: Creating AWS role")
 	if err := CreateRoleWithTrustRelationsip(policyARN, params); err != nil {
 		return errors.Errorf("failed to create role, err: %v", err)
 	}

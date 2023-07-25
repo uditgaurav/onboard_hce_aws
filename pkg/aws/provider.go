@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"crypto/tls"
 	"encoding/hex"
-	"fmt"
 	"net/url"
 	"strings"
 
@@ -17,13 +16,14 @@ import (
 )
 
 // ConnectOIDCProvider will connect the provided OIDC provider in the AWS account
-func ConnectOIDCProvider(onboardingParams hce_types.OnboardingParameters) error {
+func ConnectOIDCProvider(onboardingParams hce_types.OnboardingParameters) (string, error) {
 
 	clientID := "sts.amazonaws.com"
+	var providerArn string
 
 	thumbprint, err := getThumbprint(onboardingParams.ProviderUrl)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 
 	log.Info("[Info]: The thumbprint is created successfully")
@@ -44,11 +44,22 @@ func ConnectOIDCProvider(onboardingParams hce_types.OnboardingParameters) error 
 
 	result, err := svc.CreateOpenIDConnectProvider(params)
 	if err != nil {
-		return errors.Errorf("Error creating OIDC provider: %v", err)
+		if strings.Contains(err.Error(), "already exists") {
+			log.Warnf("[Warning]: %v", err)
+			arn, err := getProviderArn(onboardingParams.ProviderUrl, onboardingParams.Region)
+			if err != nil {
+				return "", errors.Errorf("Error getting OIDC provider ARN: %v", err)
+			}
+			log.Infof("[Info]: The providerARN for the given URL is: %v", arn)
+			providerArn = arn
+		} else {
+			return "", errors.Errorf("Error creating OIDC provider: %v", err)
+		}
+	} else {
+		log.Infof("[Info]: OIDC provider created with ARN: %v", *result.OpenIDConnectProviderArn)
+		providerArn = *result.OpenIDConnectProviderArn
 	}
-	log.Infof("[Info]: OIDC provider created with ARN: %v", *result.OpenIDConnectProviderArn)
-	onboardingParams.ProviderARN = *result.OpenIDConnectProviderArn
-	return nil
+	return providerArn, nil
 }
 
 // getThumbprint will create the thumbprint for the given provider URL
@@ -69,4 +80,32 @@ func getThumbprint(urlStr string) (string, error) {
 	cert := conn.ConnectionState().PeerCertificates[0]
 	digest := sha1.Sum(cert.Raw)
 	return strings.ToUpper(hex.EncodeToString(digest[:])), nil
+}
+
+func getProviderArn(identityProviderUrl, region string) (string, error) {
+
+	// Load session from shared config
+	sess := common.GetAWSSession(region)
+	svc := iam.New(sess)
+
+	input := &iam.ListOpenIDConnectProvidersInput{}
+	result, err := svc.ListOpenIDConnectProviders(input)
+	if err != nil {
+		return "", errors.Errorf("Failed to list providers, err: %v", err)
+	}
+
+	for _, provider := range result.OpenIDConnectProviderList {
+		providerDetails, err := svc.GetOpenIDConnectProvider(&iam.GetOpenIDConnectProviderInput{
+			OpenIDConnectProviderArn: provider.Arn,
+		})
+		if err != nil {
+			log.Infof("Failed to get provider details for %s, %v", *provider.Arn, err)
+			continue
+		}
+		if strings.Contains(identityProviderUrl, *providerDetails.Url) {
+			return *provider.Arn, nil
+		}
+	}
+
+	return "", errors.Errorf("no provider found with the given URL: %s", identityProviderUrl)
 }

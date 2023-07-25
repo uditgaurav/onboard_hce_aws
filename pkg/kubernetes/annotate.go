@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/aws"
@@ -13,9 +14,14 @@ import (
 // AnnotateServiceAccount will annotate the given experiment service account with aws roleARN
 func AnnotateServiceAccount(params types.OnboardingParameters, clients clients.ClientSets) error {
 
-	roleARN, err := aws.GetRoleARN(params.Region, params.RoleName)
+	var roleName string
+	if strings.TrimSpace(params.RoleName) == "" {
+		roleName = "HCERole-" + params.Infra.Namespace
+	}
+
+	roleARN, err := aws.GetRoleARN(params.Region, roleName)
 	if err != nil {
-		return errors.Errorf("failed to retrive roleARN from given role name '%v', err: %v", params.RoleName, err)
+		return errors.Errorf("failed to retrive roleARN from given role name '%v', err: %v", roleName, err)
 	}
 	sa, err := clients.KubeClient.CoreV1().ServiceAccounts(params.Infra.Namespace).Get(context.Background(), params.ExperimentServiceAccountName, metav1.GetOptions{})
 	if err != nil {

@@ -56,11 +56,11 @@ type OnboardingParameters struct {
 	ProviderARN                  string
 	RoleName                     string
 	RoleARN                      string
-	Mode                         string
 	Resources                    string
 	Region                       string
 	ExperimentServiceAccountName string
 	KubeConfigPath               string
+	Actions                      string
 }
 
 type Response struct {

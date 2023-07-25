@@ -50,11 +50,11 @@ func init() {
 	// Flags for aws setup
 	rootCmd.Flags().StringVar(&params.ProviderUrl, "provider-url", "", "Provider URL")
 	rootCmd.Flags().StringVar(&params.RoleName, "role-name", "", "Role Name")
-	rootCmd.Flags().StringVar(&params.Mode, "mode", "", "Mode")
 	rootCmd.Flags().StringVar(&params.Resources, "resources", "", "Resources")
 	rootCmd.Flags().StringVar(&params.Region, "region", "", "Target AWS Region")
 	rootCmd.Flags().StringVar(&params.ExperimentServiceAccountName, "service-account", "litmus-admin", "Experiment Service Account Name")
 	rootCmd.Flags().StringVar(&params.KubeConfigPath, "kubeconfig-path", "", "Path to the kubeconfig file")
+	rootCmd.Flags().StringVar(&params.Actions, "actions", "all", "Actions that are performed by this cli. (Default all)")
 
 }
 

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/litmuschaos/litmus-go/pkg/cloud/aws/common"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/uditgaurav/onboard_hce_aws/pkg/types"
@@ -15,36 +15,38 @@ import (
 // CreateRoleWithTrustRelationsip will create the role or use a existing role with added OIDC provider
 func CreateRoleWithTrustRelationsip(policyARN string, params types.OnboardingParameters) error {
 
-	// Load session from shared config
-	sess := common.GetAWSSession(params.Region)
-
-	// Create IAM service client
-	svc := iam.New(sess)
-
-	audience := "sts.amazonaws.com"
-
+	log.Infof("Provider ARN, %v", params.ProviderARN)
 	// 1. Add provider to a new role with a given role name
 	switch strings.TrimSpace(params.RoleName) {
 	case "":
 		newRoleName := "HCERole-" + params.Infra.Namespace
 		log.Infof("[Info]: Creating a new role with role name '%v'", newRoleName)
-		if err := addProviderToNewRole(svc, newRoleName, policyARN, params.ProviderARN, audience, params); err != nil {
-			return aws.ErrMissingEndpoint
+		if err := addProviderToNewRole(newRoleName, policyARN, params.ProviderARN, params); err != nil {
+			return err
 		}
 	default:
 		log.Infof("[Info]: Using a existing role with roleARN '%v' for adding provider", params.RoleName)
-		if err := addProviderToExistingRole(svc, params.RoleName, params.ProviderARN, audience); err != nil {
-			return aws.ErrMissingEndpoint
+		if err := addProviderToExistingRole(params.RoleName, params.ProviderARN, params.Region, params.Infra.Namespace, params.ExperimentServiceAccountName); err != nil {
+			return err
 		}
 	}
-	log.Info("[Info]: The role is created successfully with provider")
+	log.Info("[Info]: The role is updated successfully with provider")
 	return nil
 }
 
 // addProviderToNewRole will add the OIDC provider to a new role
-func addProviderToNewRole(svc *iam.IAM, roleName, policyARN, provider, audience string, params types.OnboardingParameters) error {
+func addProviderToNewRole(roleName, policyARN, provider string, params types.OnboardingParameters) error {
 
-	_, err := svc.CreateRole(&iam.CreateRoleInput{
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(params.Region),
+	})
+
+	if err != nil {
+		return err
+	}
+	svc := iam.New(sess)
+
+	_, err = svc.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(`{
             "Version": "2012-10-17",
             "Statement": [
@@ -56,12 +58,12 @@ func addProviderToNewRole(svc *iam.IAM, roleName, policyARN, provider, audience 
                     "Action": "sts:AssumeRoleWithWebIdentity",
                     "Condition": {
                         "StringEquals": {
-                            "%s:aud": "%s"
+                            "%s:aud": "system:serviceaccount:%s:%s"
                         }
                     }
                 }
             ]
-        }`, provider, provider, audience)),
+        }`, provider, provider, params.Infra.Namespace, params.ExperimentServiceAccountName)),
 		Path:     aws.String("/"),
 		RoleName: aws.String(roleName),
 	})
@@ -83,9 +85,18 @@ func addProviderToNewRole(svc *iam.IAM, roleName, policyARN, provider, audience 
 }
 
 // addProviderToExistingRole will add the OIDC provider to an existing role
-func addProviderToExistingRole(svc *iam.IAM, roleName, provider, audience string) error {
+func addProviderToExistingRole(roleName, provider, region, ns, experimentServiceAccount string) error {
 
-	_, err := svc.UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+
+	if err != nil {
+		return err
+	}
+	svc := iam.New(sess)
+
+	_, err = svc.UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
 		RoleName: aws.String(roleName),
 		PolicyDocument: aws.String(fmt.Sprintf(`{
             "Version": "2012-10-17",
@@ -98,12 +109,12 @@ func addProviderToExistingRole(svc *iam.IAM, roleName, provider, audience string
                     "Action": "sts:AssumeRoleWithWebIdentity",
                     "Condition": {
                         "StringEquals": {
-                            "%s:aud": "%s"
+                            "%s:aud": "system:serviceaccount:%s:%s"
                         }
                     }
                 }
             ]
-        }`, provider, provider, audience)),
+        }`, provider, provider, ns, experimentServiceAccount)),
 	})
 
 	if err != nil {
@@ -115,8 +126,13 @@ func addProviderToExistingRole(svc *iam.IAM, roleName, provider, audience string
 // GetRoleARN will return the roleARN for given roleName
 func GetRoleARN(region, roleName string) (string, error) {
 
-	// Load session from shared config
-	sess := common.GetAWSSession(region)
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+
+	if err != nil {
+		return "", err
+	}
 	svc := iam.New(sess)
 
 	input := &iam.GetRoleInput{
