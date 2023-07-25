@@ -174,6 +174,7 @@ Utilize this command to carry out the comprehensive onboarding process. This pro
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources>
+
 ```
 
 - **Command for executing the full onboarding process with a predefined AWS Role**
@@ -182,6 +183,7 @@ This command is also utilized to carry out the comprehensive onboarding process.
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources> --role-name <you-aws-chaos-role-name>
+
 ```
 
 - **Command to solely install the chaos infrastructure**
@@ -190,6 +192,7 @@ Use this command when you want to focus exclusively on the installation of the c
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+
 ```
 
 - **Command to just perform the AWS operations**
@@ -198,6 +201,7 @@ This command will be used to perform only the AWS operations that is adding the 
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+
 ```
 
 - **Command to solely execute the annotation**
@@ -206,6 +210,7 @@ Use this command when you only want to execute the annotation of the experiment 
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --actions only_install
+
 ```
 
 - **Command for executing both the infra installation and AWS operation**
@@ -214,6 +219,7 @@ This command allows for the execution of both the chaos infrastructure installat
 
 ```bash
 onboard_hce_aws --account-id <your-account-id> --api-key <your-api-key> --infra-name <your-infra-name> --infra-namespace <your-infra-namespace> --project <your-harness-project-id> --provider-url <your-provider-url-from-source-acoount> --region <you-aws-region> --resources <comma-separated-resources> --role-name <you-aws-chaos-role-name>
+
 ```
 
 
