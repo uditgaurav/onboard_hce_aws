@@ -12,13 +12,13 @@ To install, follow these steps:
 For AMD64 / x86_64:
 
 ```bash
-[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-linux-amd64
 ```
 
 For ARM64:
 
 ```bash
-[ $(uname -m) = aarch64 ] && curl -Lo ./onboard_hce_aws https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-arm64
+[ $(uname -m) = aarch64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-linux-386
 ```
 
 After downloading, add execution permissions and move it to your binary installation directory:
@@ -32,13 +32,13 @@ sudo mv ./onboard_hce_aws /usr/local/bin/onboard_hce_aws
 For Intel Macs:
 
 ```bash
-[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://kind.sigs.k8s.io/dl/v0.20.0/kind-darwin-amd64
+[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-darwin-amd64
 ```
 
 For M1 / ARM Macs:
 
 ```bash
-[ $(uname -m) = arm64 ] && curl -Lo ./onboard_hce_aws https://kind.sigs.k8s.io/dl/v0.20.0/kind-darwin-arm64
+[ $(uname -m) = arm64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-darwin-arm64
 ```
 
 After downloading, add execution permissions and move it to your binary installation directory:
