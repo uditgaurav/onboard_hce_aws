@@ -84,6 +84,11 @@ func Execute(params types.OnboardingParameters) error {
 			}
 		}
 
+	case "only_annotate":
+		if err := kubernetes.AnnotateServiceAccount(params, *clients); err != nil {
+			return errors.Errorf("failed to annotate experiment service account with role arn, err: %v", err)
+		}
+
 	default:
 		return errors.Errorf("invalid action: %s", params.Actions)
 
