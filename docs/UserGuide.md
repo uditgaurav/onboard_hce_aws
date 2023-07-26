@@ -128,34 +128,39 @@ In your configuration file, you can include all the relevant parameters as key-v
 
 ```json
 [{
-    "apiKey": "your_api_key",
-    "accountId": "your_account_id",
+    "apiKey": "",
+    "accountId": "",
+    "project": "",
+    "organisation": "default",
     "infra": {
-        "name": "your_infra_name",
+        "name": "",
         "namespace": "hce",
-        "description": "Infra for Harness Chaos Testing",
+        "infraScope": "namespace",
+        "infraNsExists": true,
+        "infraDescription": "Infra for Harness Chaos Testing",
         "serviceAccount": "hce",
         "infraSaExists": false,
-        "environmentID": "",
         "platformName": "",
         "skipSsl": false
     },
-    "project": "",
-    "infraScope": "namespace",
-    "infraNsExists": true,
-    "organisation": "default",
-    "timeout": 180,
-    "delay": 2,
+    "environment": {
+        "environmentDescription": "Environment for Harness Chaos Testing",
+        "environmentType": "PreProduction",
+        "environmentName": ""
+    },
     "providerUrl": "",
     "roleName": "",
-    "resources": "",
+    "resources": "all",
     "region": "",
     "experimentServiceAccountName": "litmus-admin",
     "kubeConfigPath": "",
     "actions": "all",
     "awsCredentialFile": "",
-    "awsProfile": "default"
+    "awsProfile": "default",
+    "timeout": 180,
+    "delay": 2
 }]
+
 ```
 
 - Using a configuration file has numerous benefits. Primarily, it provides a cleaner command line experience by significantly reducing the length of the command you need to execute, thus eliminating the necessity to remember lengthy flag inputs. This enables you to set your configuration parameters in a standalone, reusable, and version-controllable format, thereby improving code manageability.

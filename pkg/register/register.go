@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,13 +28,26 @@ import (
 // RegisterInfra is a function to register infrastructure details using the Harness API.
 func RegisterInfra(params types.OnboardingParameters) error {
 
+	// If the user didn't provide infra-environment-id, then set it to infra-name with a '-env' suffix.
+	if params.Environment.EnvironmentName == "" {
+		params.Environment.EnvironmentName = params.Infra.Name + "-env"
+	}
+
 	log.InfoWithValues("[Info]: Creating the chaos infra with following details:", logrus.Fields{
 		"ChaosInfra Name":             params.Infra.Name,
 		"ChaosInfra Namespace":        params.Infra.Namespace,
-		"ChoasInfra Scope":            params.InfraScope,
+		"ChoasInfra Scope":            params.Infra.InfraScope,
 		"ChaosInfra Service Acccount": params.Infra.ServiceAccount,
-		"Environment":                 params.Infra.Name + "-env",
+		"Environment":                 params.Environment.EnvironmentName,
 	})
+
+	// createChaosEnvironment will create the chaos infra for the environment
+	if err := createChaosEnvironment(params); err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
+			return errors.Errorf("failed to create chaos environment '%v', err: %v", params.Environment.EnvironmentName, err)
+		}
+		log.Info("[Info]: Environment already exits, creating chaos infra")
+	}
 
 	// The API endpoint URL
 	url := fmt.Sprintf("https://app.harness.io/gateway/chaos/manager/api/query?accountIdentifier=%s", params.AccountId)
@@ -47,11 +61,6 @@ func RegisterInfra(params types.OnboardingParameters) error {
 			manifest
 		}
 	}`
-
-	// If the user didn't provide infra-environment-id, then set it to infra-name with a '-env' suffix.
-	if params.Infra.EnvironmentID == "" {
-		params.Infra.EnvironmentID = params.Infra.Name + "-env"
-	}
 
 	// If the user didn't provide infra-platform-name, then set it to infra-name with a '-platform' suffix.
 	if params.Infra.PlatformName == "" {
@@ -67,13 +76,13 @@ func RegisterInfra(params types.OnboardingParameters) error {
 		},
 		Request: types.Request{
 			Name:             params.Infra.Name,
-			EnvironmentID:    params.Infra.EnvironmentID,
-			Description:      params.Infra.Description,
+			EnvironmentID:    convertString(params.Environment.EnvironmentName),
+			Description:      params.Infra.InfraDescription,
 			PlatformName:     params.Infra.PlatformName,
 			InfraNamespace:   params.Infra.Namespace,
 			ServiceAccount:   params.Infra.ServiceAccount,
-			InfraScope:       params.InfraScope,
-			InfraNsExists:    params.InfraNsExists,
+			InfraScope:       params.Infra.InfraScope,
+			InfraNsExists:    params.Infra.InfraNsExists,
 			InfraSaExists:    params.Infra.InfraSaExists,
 			InstallationType: "MANIFEST",
 			SkipSsl:          params.Infra.SkipSsl,
@@ -130,6 +139,7 @@ func RegisterInfra(params types.OnboardingParameters) error {
 	} else {
 		return errors.Errorf("[Info]: The prepared chaos infra manifest is empty")
 	}
+	log.Infof("[Info]: The infraId is: %v", responseData.Data.RegisterInfra.InfraID)
 
 	if err := applyChaosManifest(responseData.Data.RegisterInfra.Token, responseData.Data.RegisterInfra.Manifest, responseData.Data.RegisterInfra.InfraID, params); err != nil {
 		return errors.Errorf("Failed to create chaos infra manifest: ", err)
@@ -325,4 +335,54 @@ func waitForChaosInfra(infraID string, params types.OnboardingParameters) error 
 			log.Info("[Info]: The infra is not activated yet")
 		}
 	}
+}
+
+// createChaosEnvironment will create the chaos environment for chaos infra
+func createChaosEnvironment(params types.OnboardingParameters) error {
+
+	data := types.HarnessEnvironment{
+		OrgIdentifier:     params.Organisation,
+		ProjectIdentifier: params.Project,
+		Identifier:        convertString(params.Environment.EnvironmentName),
+		Name:              params.Environment.EnvironmentName,
+		Description:       params.Environment.EnvironmentDescription,
+		Type:              params.Environment.EnvironmentType,
+	}
+
+	payloadBuf := new(bytes.Buffer)
+	if err := ejson.NewEncoder(payloadBuf).Encode(data); err != nil {
+		return errors.Errorf("Error encoding JSON: %v", err)
+	}
+
+	url := fmt.Sprintf("https://app.harness.io/ng/api/environmentsV2?accountIdentifier=%s", params.AccountId)
+	req, err := http.NewRequest("POST", url, payloadBuf)
+	if err != nil {
+		return errors.Errorf("Error creating request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", params.ApiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Errorf("Error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		return errors.Errorf("failed to create chaos environment, status code '%v', response body: '%s', err: %v",
+			resp.StatusCode, string(bodyBytes), resp.Status)
+	}
+
+	return nil
+}
+
+// convertString will formate the string for environment id
+func convertString(str string) string {
+	re := regexp.MustCompile(`[-.\s]+`)
+	str = re.ReplaceAllString(str, "_")
+	re = regexp.MustCompile(`[^A-Za-z_]`)
+	str = re.ReplaceAllString(str, "")
+
+	return str
 }

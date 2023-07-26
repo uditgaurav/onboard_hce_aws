@@ -3,13 +3,20 @@ package types
 type InfraDetails struct {
 	Name             string
 	Namespace        string
-	EnvironmentID    string
-	Description      string
+	InfraDescription string
 	PlatformName     string
 	ServiceAccount   string
 	InfraSaExists    bool
 	InstallationType string
+	InfraScope       string
+	InfraNsExists    bool
 	SkipSsl          bool
+}
+
+type EnvironmentDetails struct {
+	EnvironmentName        string
+	EnvironmentDescription string
+	EnvironmentType        string
 }
 
 type Identifiers struct {
@@ -48,8 +55,7 @@ type OnboardingParameters struct {
 	Organisation                 string
 	Project                      string
 	Infra                        InfraDetails
-	InfraScope                   string
-	InfraNsExists                bool
+	Environment                  EnvironmentDetails
 	Timeout                      int
 	Delay                        int
 	ProviderUrl                  string
@@ -74,4 +80,16 @@ type Response struct {
 			Manifest string `json:"manifest"`
 		} `json:"registerInfra"`
 	} `json:"data"`
+}
+
+type HarnessEnvironment struct {
+	OrgIdentifier     string            `json:"orgIdentifier"`
+	ProjectIdentifier string            `json:"projectIdentifier"`
+	Identifier        string            `json:"identifier"`
+	Tags              map[string]string `json:"tags"`
+	Name              string            `json:"name"`
+	Description       string            `json:"description"`
+	Color             string            `json:"color"`
+	Type              string            `json:"type"`
+	Yaml              string            `json:"yaml"`
 }
