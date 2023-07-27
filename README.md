@@ -4,6 +4,8 @@ It is a command-line interface (CLI) utility tool designed to facilitate a simpl
 
 This tool is not just about easing the onboarding process; we have developed it to seamlessly integrate with your AWS account and conduct HCE experiments. Configuring and authenticating HCE with AWS can be a complex multi-step process, but with `onboard_hce_aws`, we significantly reduce this complexity.
 
+![image](https://github.com/uditgaurav/onboard_hce_aws/assets/35391335/9b2ec91c-72c0-4f70-b9d8-15e58e23d3ae)
+
 ## 💡 Key Features
 
 - Streamlines and simplifies the HCE onboarding process.
