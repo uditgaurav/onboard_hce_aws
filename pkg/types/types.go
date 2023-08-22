@@ -1,16 +1,17 @@
 package types
 
 type InfraDetails struct {
-	Name             string
-	Namespace        string
-	InfraDescription string
-	PlatformName     string
-	ServiceAccount   string
-	InfraSaExists    bool
-	InstallationType string
-	InfraScope       string
-	InfraNsExists    bool
-	SkipSsl          bool
+	Name                 string
+	Namespace            string
+	InfraDescription     string
+	PlatformName         string
+	ServiceAccount       string
+	InfraSaExists        bool
+	InstallationType     string
+	InfraScope           string
+	InfraNsExists        bool
+	IsAutoUpgradeEnabled bool
+	SkipSsl              bool
 }
 
 type EnvironmentDetails struct {
@@ -26,17 +27,18 @@ type Identifiers struct {
 }
 
 type Request struct {
-	Name             string `json:"name"`
-	EnvironmentID    string `json:"environmentID"`
-	Description      string `json:"description"`
-	PlatformName     string `json:"platformName"`
-	InfraNamespace   string `json:"infraNamespace"`
-	ServiceAccount   string `json:"serviceAccount"`
-	InfraScope       string `json:"infraScope"`
-	InfraNsExists    bool   `json:"infraNsExists"`
-	InfraSaExists    bool   `json:"infraSaExists"`
-	InstallationType string `json:"installationType"`
-	SkipSsl          bool   `json:"skipSsl"`
+	Name                 string `json:"name"`
+	EnvironmentID        string `json:"environmentID"`
+	Description          string `json:"description"`
+	PlatformName         string `json:"platformName"`
+	InfraNamespace       string `json:"infraNamespace"`
+	ServiceAccount       string `json:"serviceAccount"`
+	InfraScope           string `json:"infraScope"`
+	InfraNsExists        bool   `json:"infraNsExists"`
+	InfraSaExists        bool   `json:"infraSaExists"`
+	InstallationType     string `json:"installationType"`
+	SkipSsl              bool   `json:"skipSsl"`
+	IsAutoUpgradeEnabled bool   `json:"isAutoUpgradeEnabled"`
 }
 
 type Payload struct {

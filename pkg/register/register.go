@@ -33,14 +33,6 @@ func RegisterInfra(params types.OnboardingParameters) error {
 		params.Environment.EnvironmentName = params.Infra.Name + "-env"
 	}
 
-	log.InfoWithValues("[Info]: Creating the chaos infra with following details:", logrus.Fields{
-		"ChaosInfra Name":             params.Infra.Name,
-		"ChaosInfra Namespace":        params.Infra.Namespace,
-		"ChoasInfra Scope":            params.Infra.InfraScope,
-		"ChaosInfra Service Acccount": params.Infra.ServiceAccount,
-		"Environment":                 params.Environment.EnvironmentName,
-	})
-
 	// createChaosEnvironment will create the chaos infra for the environment
 	if err := createChaosEnvironment(params); err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
@@ -67,6 +59,29 @@ func RegisterInfra(params types.OnboardingParameters) error {
 		params.Infra.PlatformName = params.Infra.Name + "-platform"
 	}
 
+	log.InfoWithValues("[Info]: Creating the chaos infra with following details:", logrus.Fields{
+		"ChaosInfra Name":             params.Infra.Name,
+		"ChaosInfra Namespace":        params.Infra.Namespace,
+		"ChoasInfra Scope":            params.Infra.InfraScope,
+		"ChaosInfra Service Acccount": params.Infra.ServiceAccount,
+		"Environment":                 params.Environment.EnvironmentName,
+		"Name:":                       params.Infra.Name,
+		"EnvironmentID":               convertString(params.Environment.EnvironmentName),
+		"Description":                 params.Infra.InfraDescription,
+		"PlatformName":                params.Infra.PlatformName,
+		"InfraNamespace":              params.Infra.Namespace,
+		"ServiceAccount":              params.Infra.ServiceAccount,
+		"InfraScope":                  params.Infra.InfraScope,
+		"InfraNsExists":               params.Infra.InfraNsExists,
+		"InfraSaExists":               params.Infra.InfraSaExists,
+		"InstallationType":            "MANIFEST",
+		"SkipSsl":                     params.Infra.SkipSsl,
+		"OrgIdentifier":               params.Organisation,
+		"AccountIdentifier":           params.AccountId,
+		"ProjectIdentifier":           params.Project,
+		"isAutoUpgradeEnabled":        params.Infra.IsAutoUpgradeEnabled,
+	})
+
 	// Set up the request variables
 	variables := types.Variables{
 		Identifiers: types.Identifiers{
@@ -75,17 +90,18 @@ func RegisterInfra(params types.OnboardingParameters) error {
 			ProjectIdentifier: params.Project,
 		},
 		Request: types.Request{
-			Name:             params.Infra.Name,
-			EnvironmentID:    convertString(params.Environment.EnvironmentName),
-			Description:      params.Infra.InfraDescription,
-			PlatformName:     params.Infra.PlatformName,
-			InfraNamespace:   params.Infra.Namespace,
-			ServiceAccount:   params.Infra.ServiceAccount,
-			InfraScope:       params.Infra.InfraScope,
-			InfraNsExists:    params.Infra.InfraNsExists,
-			InfraSaExists:    params.Infra.InfraSaExists,
-			InstallationType: "MANIFEST",
-			SkipSsl:          params.Infra.SkipSsl,
+			Name:                 params.Infra.Name,
+			EnvironmentID:        convertString(params.Environment.EnvironmentName),
+			Description:          params.Infra.InfraDescription,
+			PlatformName:         params.Infra.PlatformName,
+			InfraNamespace:       params.Infra.Namespace,
+			ServiceAccount:       params.Infra.ServiceAccount,
+			InfraScope:           params.Infra.InfraScope,
+			InfraNsExists:        params.Infra.InfraNsExists,
+			InfraSaExists:        params.Infra.InfraSaExists,
+			InstallationType:     "MANIFEST",
+			SkipSsl:              params.Infra.SkipSsl,
+			IsAutoUpgradeEnabled: params.Infra.IsAutoUpgradeEnabled,
 		},
 	}
 
