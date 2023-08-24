@@ -118,14 +118,17 @@ func PreparePolicyAndCreateRole(params types.OnboardingParameters) error {
 	}
 	log.Info(string(policyJson))
 
-	policyARN, err := createPolicy(combinedPolicy, policyName, params.Region)
-	if err != nil {
-		return err
-	}
+	if !params.Dryrun {
 
-	log.Infof("[Info]: The policy is successfully created")
-	if err := CreateRoleWithTrustRelationsip(policyARN, params); err != nil {
-		return errors.Errorf("failed to create role, err: %v", err)
+		policyARN, err := createPolicy(combinedPolicy, policyName, params.Region)
+		if err != nil {
+			return err
+		}
+
+		log.Infof("[Info]: The policy is successfully created")
+		if err := CreateRoleWithTrustRelationsip(policyARN, params); err != nil {
+			return errors.Errorf("failed to create role, err: %v", err)
+		}
 	}
 	return nil
 }

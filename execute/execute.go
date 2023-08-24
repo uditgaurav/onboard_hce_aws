@@ -21,6 +21,11 @@ func Execute(params types.OnboardingParameters) error {
 	switch params.Actions {
 
 	case "all":
+		if params.CreateNS {
+			if err := kubernetes.CreateNS(params.Infra.Namespace, *clients); err != nil {
+				return errors.Errorf("failed to create ns, err: %v", err)
+			}
+		}
 		if err := register.RegisterInfra(params); err != nil {
 			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
 		}
@@ -44,12 +49,22 @@ func Execute(params types.OnboardingParameters) error {
 
 	case "only_install":
 
+		if params.CreateNS {
+			if err := kubernetes.CreateNS(params.Infra.Namespace, *clients); err != nil {
+				return errors.Errorf("failed to create ns, err: %v", err)
+			}
+		}
 		if err := register.RegisterInfra(params); err != nil {
 			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
 		}
 
 	case "install_with_provider":
 
+		if params.CreateNS {
+			if err := kubernetes.CreateNS(params.Infra.Namespace, *clients); err != nil {
+				return errors.Errorf("failed to create ns, err: %v", err)
+			}
+		}
 		if err := register.RegisterInfra(params); err != nil {
 			return errors.Errorf("failed to register ChaosInfra, err: %v", err)
 		}

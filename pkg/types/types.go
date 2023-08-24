@@ -71,6 +71,8 @@ type OnboardingParameters struct {
 	Actions                      string
 	AWSCredentialFile            string
 	AWSProfile                   string
+	Dryrun                       bool
+	CreateNS                     bool
 }
 
 type Response struct {
