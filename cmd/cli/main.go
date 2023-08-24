@@ -80,6 +80,7 @@ func init() {
 	rootCmd.Flags().BoolVar(&params.Infra.SkipSsl, "infra-skip-ssl", false, "Skip SSL for Infra")
 	rootCmd.Flags().BoolVar(&params.Infra.IsAutoUpgradeEnabled, "auto-upgrade", false, "Infra auto upgrade")
 	rootCmd.Flags().BoolVar(&params.Dryrun, "dry-run", false, "To Show the policy JSON")
+	rootCmd.Flags().BoolVar(&params.CreateNS, "create-ns", false, "To create chaos infra namespace")
 
 	rootCmd.Flags().IntVar(&params.Timeout, "timeout", 180, "Timeout For Infra setup")
 	rootCmd.Flags().IntVar(&params.Delay, "delay", 2, "Delay between checking the status of Infra")
