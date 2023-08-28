@@ -12,13 +12,13 @@ To install, follow these steps:
 For AMD64 / x86_64:
 
 ```bash
-[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-linux-amd64
+[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.3.0/cli-linux-amd64
 ```
 
 For Arm64:
 
 ```bash
-[ $(uname -m) = aarch64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-linux-arm64
+[ $(uname -m) = aarch64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.3.0/cli-linux-arm64
 ```
 
 After downloading, add execution permissions and move it to your binary installation directory:
@@ -32,13 +32,13 @@ sudo mv ./onboard_hce_aws /usr/local/bin/onboard_hce_aws
 For Intel Macs:
 
 ```bash
-[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-darwin-amd64
+[ $(uname -m) = x86_64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.3.0/cli-darwin-amd64
 ```
 
 For M1 / ARM Macs:
 
 ```bash
-[ $(uname -m) = arm64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-darwin-arm64
+[ $(uname -m) = arm64 ] && curl -Lo ./onboard_hce_aws https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.3.0/cli-darwin-arm64
 ```
 
 After downloading, add execution permissions and move it to your binary installation directory:
@@ -53,7 +53,7 @@ mv ./onboard_hce_aws /some-dir-in-your-PATH/onboard_hce_aws
 In PowerShell:
 
 ```bash
-curl.exe -Lo onboard_hce_aws-windows-amd64.exe https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.1.0/cli-windows-amd64
+curl.exe -Lo onboard_hce_aws-windows-amd64.exe https://github.com/uditgaurav/onboard_hce_aws/releases/download/0.3.0/cli-windows-amd64
 ```
 
 After downloading, move it to your binary installation directory:
