@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -48,10 +47,19 @@ var rootCmd = &cobra.Command{
 }
 
 func registerInfra(params types.OnboardingParameters) {
+
+	if err := os.Setenv("AWS_SHARED_CREDENTIALS_FILE", params.AWSCredentialFile); err != nil {
+		log.Fatalf("Failed to set AWS_SHARED_CREDENTIALS_FILE environment variable, err: %v", err)
+	}
+	if err := os.Setenv("AWS_PROFILE", params.AWSProfile); err != nil {
+		log.Fatalf("Failed to set AWS_PROFILE environment variable, err: %v", err)
+	}
+
 	if err := os.Setenv("KUBECONFIG", params.KubeConfigPath); err != nil {
 		log.Fatalf("Failed to set KUBECONFIG environment variable, err: %v", err)
 	}
 
+	// Now proceed with the execution
 	if err := execute.Execute(params); err != nil {
 		log.Fatalf("fail to register chaos infra with aws, err: %v", err)
 	}
@@ -97,18 +105,6 @@ func init() {
 	rootCmd.Flags().StringVar(&params.AWSProfile, "aws-profile", "default", "Provide the AWS profile (Default 'default')")
 	rootCmd.Flags().StringVar(&configFile, "config", "", "Config file containing parameters")
 
-	if params.AWSCredentialFile == "" {
-		params.AWSCredentialFile = fmt.Sprintf("%s/.aws/credentials", os.Getenv("HOME"))
-	}
-
-	if err := os.Setenv("AWS_SHARED_CREDENTIALS_FILE", params.AWSCredentialFile); err != nil {
-		log.Fatalf("Failed to set AWS_SHARED_CREDENTIALS_FILE environment variable, err: %v", err)
-	}
-
-	// Set the AWS_PROFILE environment variable
-	if err := os.Setenv("AWS_PROFILE", params.AWSProfile); err != nil {
-		log.Fatalf("Failed to set AWS_PROFILE environment variable, err: %v", err)
-	}
 }
 
 func main() {
