@@ -17,6 +17,8 @@ func AnnotateServiceAccount(params types.OnboardingParameters, clients clients.C
 	var roleName string
 	if strings.TrimSpace(params.RoleName) == "" {
 		roleName = "HCERole-" + params.Infra.Namespace
+	} else {
+		roleName = params.RoleName
 	}
 
 	roleARN, err := aws.GetRoleARN(params.Region, roleName)

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"os"
 
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -12,17 +12,25 @@ import (
 )
 
 var params types.OnboardingParameters
-var configFile string
+var osType, configFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "register",
 	Short: "Register a new Harness Chaos infrastructure with AWS",
 	Long:  `A CLI utility to register a new Harness Chaos infrastructure with AWS account.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if osType == "linux" {
+			if params.AWSCredentialFile == "" {
+				params.AWSCredentialFile = fmt.Sprintf("%s/.aws/credentials", os.Getenv("HOME"))
+			}
+			if params.KubeConfigPath == "" {
+				params.KubeConfigPath = fmt.Sprintf("%s/.kube/config", os.Getenv("HOME"))
+			}
+		}
 		// Check if config file flag is provided
 		if configFile != "" {
 			// Read from the config file
-			configBytes, err := ioutil.ReadFile(configFile)
+			configBytes, err := os.ReadFile(configFile)
 			if err != nil {
 				log.Fatalf("Unable to read config file: %v", err)
 			}
@@ -72,7 +80,7 @@ func init() {
 	rootCmd.Flags().StringVar(&params.Project, "project", "", "Project Identifier")
 
 	// Default value for infra-environment-id and infra-platform-name is calculated in RegisterInfra based on infra-name
-
+	rootCmd.Flags().StringVar(&osType, "os", "", "Operating System type (e.g. linux)")
 	rootCmd.Flags().StringVar(&params.Infra.Namespace, "infra-namespace", "hce", "Namespace for the Harness Chaos infrastructure")
 	rootCmd.Flags().StringVar(&params.Organisation, "organisation", "default", "Organisation Identifier")
 	rootCmd.Flags().StringVar(&params.Infra.InfraScope, "infra-scope", "namespace", "Infrastructure Scope")

@@ -79,7 +79,7 @@ func addProviderToNewRole(roleName, policyARN, provider string, params types.Onb
 	})
 
 	if err != nil {
-		return errors.Errorf("Error attaching policy", err)
+		return errors.Errorf("Error attaching policy, err: %v", err)
 	}
 	return nil
 }
@@ -118,7 +118,7 @@ func addProviderToExistingRole(roleName, provider, region, ns, experimentService
 	})
 
 	if err != nil {
-		return errors.Errorf("Error updating role", err)
+		return errors.Errorf("Error updating role, err: %v", err)
 	}
 	return nil
 }
